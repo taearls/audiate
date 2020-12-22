@@ -1,5 +1,7 @@
 use std::io::Error;
 
+// TODO: come up with better names for chord quality and chord kind
+// expose the least amount of this as possible
 use rust_arpeggiator::{Note, Chord, ChordQuality, ChordKind};
 
 fn main() -> Result<(), Error> {
