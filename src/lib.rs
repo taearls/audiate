@@ -20,6 +20,7 @@ pub enum ChordQuality {
 }
 
 // how to denote dominant / major seventh ?
+// how to denote suspended chords? 
 // 
 
 // describes the extensions of the chord.
@@ -35,20 +36,22 @@ pub enum ChordExtensionKind {
 }
 
 // TODO: be able to construct a note with just its name.
+#[derive(Debug, Clone)]
 pub struct Note {
-  name: String,
-  // pitch: i8, 
-  // variant: PitchVariant,
+  pub name: String,
+  pub letter: NoteLetter,
+  pub variant: NotePitchVariant,
+  // pitch: NotePitch
 }
 
 // use this value to calculate the pitch from a letter
 #[derive(Debug, Copy, Clone)]
-pub enum PitchVariant {
-  flatdbl = -2,
-  flat = -1,
-  natural = 0,
-  sharp = 1,
-  sharpdbl = 2,
+pub enum NotePitchVariant {
+  // Flatdbl = -2,
+  Flat = -1,
+  Natural = 0,
+  Sharp = 1,
+  // Sharpdbl = 2,
 }
 
 //  Because most songs are in the key of C,
@@ -59,7 +62,8 @@ pub enum PitchVariant {
 // 
 //  to get Db, subtract 1 from D.
 //  to get D#, add 1 to D.
-enum MusicNote {
+#[derive(Debug, Copy, Clone)]
+pub enum NoteLetter {
   C = 1,
   D = 3,
   E = 5,
@@ -68,6 +72,19 @@ enum MusicNote {
   A = 10,
   B = 12,
 }
+
+// Note should have
+// letter -> A - G with numeric values
+// variant -> 
+// flat - natural - sharp - double flat - double sharp
+
+// pitch value -> calculated field -> 1-12
+// letter + variant -> pitch value
+
+// name -> String representation derived from other info
+
+// cache intervals
+
 
 impl Chord {
   pub fn new(root: Note, quality: ChordQuality, extension_kind: Option<ChordExtensionKind>) -> Chord {
@@ -113,12 +130,34 @@ impl Chord {
 }
 
 impl Note {
-  pub fn new(note_name: &str) -> Note {
-    let name = String::from(note_name);
+  // TODO: make pitchvariant optional in initializer? 
+  pub fn new(note_name: &str, variant: NotePitchVariant) -> Note {
+    let name = match note_name {
+      // todo: refactor this to use a constant
+      "A" | "B" | "C" | "D" | "E" | "F" | "G"  => String::from(note_name),
+      _ => panic!("{} is not a valid note name", note_name),
+    };
+
+    let letter = match name.as_str() {
+      "A" => NoteLetter::A,
+      "B" => NoteLetter::B,
+      "C" => NoteLetter::C,
+      "D" => NoteLetter::D,
+      "E" => NoteLetter::E,
+      "F" => NoteLetter::F,
+      "G" => NoteLetter::G,
+      _ => panic!("{} is not a valid note letter", name),
+    };
+
     Note {
       name,
+      letter,
+      variant,
     }
   }
+  // fn set_pitch(note: &self) -> () {
+  //   note.pitch = note.letter + note.variant 
+  // }
 }
 
 // get the name of a chord. for now it just returns the name of the root note without any additional description. 
@@ -130,11 +169,12 @@ fn get_chord_name(root: &Note) -> String {
 // find_interval(C, 4) -> E
 fn find_interval(root: &Note, semitones: i8) -> Note {
   let name = String::from(&root.name);
+  let letter = root.letter;
   // let pitch = root.pitch;
-  // let variant = root.variant;
+  let variant = root.variant;
   Note {
     name,
-    // pitch,
-    // variant,
+    letter,
+    variant,
   }
 }
