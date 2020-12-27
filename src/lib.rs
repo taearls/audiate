@@ -35,6 +35,54 @@ pub enum ChordExtensionKind {
   Thirteenth,
 }
 
+impl Chord {
+  pub fn new(root: Note, quality: ChordQuality, extension_kind: Option<ChordExtensionKind>) -> Chord {
+    let name = get_chord_name(&root);
+
+    // TODO: add fn for grabbing triad + seventh notes
+    let third = find_interval(&root, 4);
+    let fifth = find_interval(&root, 7);
+    let seventh = match extension_kind {
+      None => None,
+      _ => Some(find_interval(&root, 10)),
+    };
+
+    // TODO: add fn for grabbing extension notes
+    let ninth = match extension_kind {
+      None => None,
+      // semitones for interval need to be dynamic
+      _ => Some(find_interval(&root, 2)),
+    };
+    let eleventh = match extension_kind {
+      None | Some(ChordExtensionKind::Ninth) => None,
+      // semitones for interval need to be dynamic
+      _ => Some(find_interval(&root, 5)),
+    };
+    let thirteenth = match extension_kind {
+      None | Some(ChordExtensionKind::Ninth) | Some(ChordExtensionKind::Eleventh) => None,
+      // semitones for interval need to be dynamic
+      _ => Some(find_interval(&root, 7)),
+    };
+
+    Chord {
+      name,
+      quality,
+      root,
+      third,
+      fifth,
+      seventh,
+      ninth,
+      eleventh,
+      thirteenth,
+    }
+  }
+}
+
+// get the name of a chord. for now it just returns the name of the root note without any additional description. 
+fn get_chord_name(root: &Note) -> String {
+  String::from(&root.name)
+}
+
 // TODO: be able to construct a note with just its name.
 #[derive(Debug, Clone)]
 pub struct Note {
@@ -85,50 +133,7 @@ pub enum NoteLetter {
 
 // cache intervals
 
-
-impl Chord {
-  pub fn new(root: Note, quality: ChordQuality, extension_kind: Option<ChordExtensionKind>) -> Chord {
-    let name = get_chord_name(&root);
-
-    // TODO: add fn for grabbing triad + seventh notes
-    let third = find_interval(&root, 4);
-    let fifth = find_interval(&root, 7);
-    let seventh = match extension_kind {
-      None => None,
-      _ => Some(find_interval(&root, 10)),
-    };
-
-    // TODO: add fn for grabbing extension notes
-    let ninth = match extension_kind {
-      None => None,
-      // semitones for interval need to be dynamic
-      _ => Some(find_interval(&root, 2)),
-    };
-    let eleventh = match extension_kind {
-      None | Some(ChordExtensionKind::Ninth) => None,
-      // semitones for interval need to be dynamic
-      _ => Some(find_interval(&root, 5)),
-    };
-    let thirteenth = match extension_kind {
-      None | Some(ChordExtensionKind::Ninth) | Some(ChordExtensionKind::Eleventh) => None,
-      // semitones for interval need to be dynamic
-      _ => Some(find_interval(&root, 7)),
-    };
-
-    Chord {
-      name,
-      quality,
-      root,
-      third,
-      fifth,
-      seventh,
-      ninth,
-      eleventh,
-      thirteenth,
-    }
-  }
-}
-
+// TODO: calculate pitch value 1 - 12 and cache it
 impl Note {
   // TODO: make pitchvariant optional in initializer? 
   pub fn new(note_name: &str, variant: NotePitchVariant) -> Note {
@@ -160,13 +165,8 @@ impl Note {
   // }
 }
 
-// get the name of a chord. for now it just returns the name of the root note without any additional description. 
-fn get_chord_name(root: &Note) -> String {
-  String::from(&root.name)
-}
-
 // find a note in relation to another by using semitones.
-// find_interval(C, 4) -> E
+// find_interval(C, Interval::MajorThird) -> E
 fn find_interval(root: &Note, semitones: i8) -> Note {
   let name = String::from(&root.name);
   let letter = root.letter;
