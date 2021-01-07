@@ -55,7 +55,8 @@ impl Note {
   // TODO: make pitchvariant optional in initializer? 
   pub fn new(note_name: &str, variant: NotePitchVariant) -> Note {
     let name = match note_name {
-      // todo: refactor this to use a constant
+
+      // todo: refactor this to use a constant or regular expression
       "A" | "B" | "C" | "D" | "E" | "F" | "G"  => String::from(note_name),
       _ => panic!("{} is not a valid note name", note_name),
     };
