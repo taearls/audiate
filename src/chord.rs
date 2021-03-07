@@ -1,15 +1,9 @@
-use crate::note::{Note, NoteLetter};
+use crate::note::Note;
 
 pub struct Chord {
   pub name: String,
   quality: ChordQuality,
   root: Note,
-  third: Note,
-  fifth: Note,
-  seventh: Option<Note>,
-  ninth: Option<Note>,
-  eleventh: Option<Note>,
-  thirteenth: Option<Note>,
 }
 
 // the chord quality a chord can be.
@@ -38,61 +32,52 @@ pub enum ChordExtensionKind {
 }
 
 impl Chord {
-  pub fn new(root: Note, quality: ChordQuality, extension_kind: Option<ChordExtensionKind>) -> Chord {
-    let name = get_chord_name(&root);
+  // pub fn new(root: &str, quality: ChordQuality) -> Result<Chord, &str> {
 
-    // TODO: add fn for grabbing triad + seventh notes
-    let third = find_interval(&root, 4);
-    let fifth = find_interval(&root, 7);
-    let seventh = match extension_kind {
-      None => None,
-      _ => Some(find_interval(&root, 10)),
-    };
 
-    // TODO: add fn for grabbing extension notes
-    let ninth = match extension_kind {
-      None => None,
-      // semitones for interval need to be dynamic
-      _ => Some(find_interval(&root, 2)),
-    };
-    let eleventh = match extension_kind {
-      None | Some(ChordExtensionKind::Ninth) => None,
-      // semitones for interval need to be dynamic
-      _ => Some(find_interval(&root, 5)),
-    };
-    let thirteenth = match extension_kind {
-      None | Some(ChordExtensionKind::Ninth) | Some(ChordExtensionKind::Eleventh) => None,
-      // semitones for interval need to be dynamic
-      _ => Some(find_interval(&root, 7)),
-    };
+  //   // if !root.to_lowercase().matches(&['a', 'b', 'c', 'd', 'e', 'f', 'g'])
+    
+  //   // let root = match root.to_lowercase() {
+  //   //   "a"
+  //   // }
+  //   // let name = get_chord_name(&root);
 
-    Chord {
-      name,
-      quality,
-      root,
-      third,
-      fifth,
-      seventh,
-      ninth,
-      eleventh,
-      thirteenth,
-    }
-  }
+  //   // TODO: add fn for grabbing triad + seventh notes
+  //   // let third = find_interval(&root, 4);
+  //   // let fifth = find_interval(&root, 7);
+
+  //   // Chord {
+  //   //   name,
+  //   //   quality,
+  //   //   root
+  //   // }
+  // }
 }
+
+// fn validate_root(root: &str) -> Option<Note> {
+//   if root.get(0)
+//          .expect("root note cannot be empty string slice")
+//          .matches(|ch| ch >= 'a' && ch <= 'g') {
+//             Note::new(root)
+//          }
+//   else {
+//     None
+//   }
+// }
 
 // get the name of a chord. for now it just returns the name of the root note without any additional description. 
 fn get_chord_name(root: &Note) -> String {
   String::from(&root.name)
 }
 
-fn find_interval(root: &Note, semitones: i8) -> Note {
-  let name = String::from(&root.name);
-  let letter = root.letter;
-  // let pitch = root.pitch;
-  let variant = root.variant;
-  Note {
-    name,
-    letter,
-    variant,
-  }
-}
+// fn find_interval(root: &Note, semitones: i8) -> Note {
+//   let name = String::from(&root.name);
+//   let letter = root.letter;
+//   // let pitch = root.pitch;
+//   let variant = root.variant;
+//   Note {
+//     name,
+//     letter,
+//     variant,
+//   }
+// }

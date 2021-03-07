@@ -1,22 +1,24 @@
-
+use regex::Regex;
+use lazy_static::lazy_static;
 
 // TODO: be able to construct a note with just its name.
 #[derive(Debug, Clone)]
 pub struct Note {
   pub name: String,
-  pub letter: NoteLetter,
-  pub variant: NotePitchVariant,
+  // pub letter: NoteLetter,
+  pitch_value: u8,
+  pitch_variant: NotePitchVariant,
   // pitch: NotePitch
 }
 
 // use this value to calculate the pitch from a letter
 #[derive(Debug, Copy, Clone)]
 pub enum NotePitchVariant {
-  // Flatdbl = -2,
+  Flatdbl = -2,
   Flat = -1,
   Natural = 0,
   Sharp = 1,
-  // Sharpdbl = 2,
+  Sharpdbl = 2,
 }
 
 //  Because most songs are in the key of C,
@@ -27,16 +29,16 @@ pub enum NotePitchVariant {
 // 
 //  to get Db, subtract 1 from D.
 //  to get D#, add 1 to D.
-#[derive(Debug, Copy, Clone)]
-pub enum NoteLetter {
-  C = 1,
-  D = 3,
-  E = 5,
-  F = 6,
-  G = 8,
-  A = 10,
-  B = 12,
-}
+// #[derive(Debug, Copy, Clone)]
+// pub enum NoteLetter {
+//   C = 1,
+//   D = 3,
+//   E = 5,
+//   F = 6,
+//   G = 8,
+//   A = 10,
+//   B = 12,
+// }
 
 // Note should have
 // letter -> A - G with numeric values
@@ -53,32 +55,37 @@ pub enum NoteLetter {
 // TODO: calculate pitch value 1 - 12 and cache it
 impl Note {
   // TODO: make pitchvariant optional in initializer? 
-  pub fn new(note_name: &str, variant: NotePitchVariant) -> Note {
-    let name = match note_name {
+  pub fn new(&self, note_name: &str) -> Option<Self> {
+    if !self.validate_note(note_name) { return None }
+    
+    // TODO: now that note_name str is validated, parse pitch info
+    let pitch_value: u8 = Note::get_pitch_value(note_name);
+    let pitch_variant = Note::get_pitch_variant(note_name);
 
-      // todo: refactor this to use a constant or regular expression
-      "A" | "B" | "C" | "D" | "E" | "F" | "G"  => String::from(note_name),
-      _ => panic!("{} is not a valid note name", note_name),
-    };
-
-    let letter = match name.as_str() {
-      "A" => NoteLetter::A,
-      "B" => NoteLetter::B,
-      "C" => NoteLetter::C,
-      "D" => NoteLetter::D,
-      "E" => NoteLetter::E,
-      "F" => NoteLetter::F,
-      "G" => NoteLetter::G,
-      _ => panic!("{} is not a valid note letter", name),
-    };
-
-    Note {
-      name,
-      letter,
-      variant,
-    }
+    Some(Note {
+      name: String::from(note_name),
+      pitch_value,
+      pitch_variant,
+    })
   }
-  // fn set_pitch(note: &self) -> () {
-  //   note.pitch = note.letter + note.variant 
-  // }
+
+  fn validate_note(&self, note: &str) -> bool {
+    // https://docs.rs/regex/1.4.3/regex/#repetitions
+    lazy_static! {
+      // check if str has a-g or A-G in one occurrence
+      // check for one or two flats, or one or two sharps
+      static ref NOTE_REGEX: Regex = Regex::new(
+        r"[a-gA-G]{1}(b{1,2})?(#{1,2})?"
+      ).unwrap();
+    }
+    (1..=3).contains(&note.len()) && NOTE_REGEX.is_match(note)
+  }
+
+  fn get_pitch_value(note_name: &str) -> u8 {
+    unimplemented!("get pitch value based on note name")
+  }
+
+  fn get_pitch_variant(note_name: &str) -> NotePitchVariant {
+    unimplemented!("get pitch variant based on note name")
+  }
 }
