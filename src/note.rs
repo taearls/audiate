@@ -2,7 +2,7 @@ use regex::Regex;
 use lazy_static::lazy_static;
 
 // TODO: be able to construct a note with just its name.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Note {
   pub name: String,
   // pub letter: NoteLetter,
@@ -12,7 +12,7 @@ pub struct Note {
 }
 
 // use this value to calculate the pitch from a letter
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum NotePitchVariant {
   Flatdbl = -2,
   Flat = -1,
@@ -55,8 +55,8 @@ pub enum NotePitchVariant {
 // TODO: calculate pitch value 1 - 12 and cache it
 impl Note {
   // TODO: make pitchvariant optional in initializer? 
-  pub fn new(&self, note_name: &str) -> Option<Self> {
-    if !self.validate_note(note_name) { return None }
+  pub fn new(note_name: &str) -> Option<Self> {
+    if !Note::validate_note(note_name) { return None }
     
     // TODO: now that note_name str is validated, parse pitch info
     let pitch_value: u8 = Note::get_pitch_value(note_name);
@@ -69,13 +69,13 @@ impl Note {
     })
   }
 
-  fn validate_note(&self, note: &str) -> bool {
+  fn validate_note(note: &str) -> bool {
     // https://docs.rs/regex/1.4.3/regex/#repetitions
     lazy_static! {
       // check if str has a-g or A-G in one occurrence
       // check for one or two flats, or one or two sharps
       static ref NOTE_REGEX: Regex = Regex::new(
-        r"[a-gA-G]{1}(b{1,2})?(#{1,2})?"
+        "^(?P<note_name>(?i)[a-g]{1})(?P<note_variant>(?-i)b|#{1,2})?$"
       ).unwrap();
     }
     (1..=3).contains(&note.len()) && NOTE_REGEX.is_match(note)
@@ -87,5 +87,69 @@ impl Note {
 
   fn get_pitch_variant(note_name: &str) -> NotePitchVariant {
     unimplemented!("get pitch variant based on note name")
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+// UNIT TESTS
+
+#[cfg(test)]
+mod validate_note_test {
+  use super::Note;
+
+  #[test]
+  fn validate_note_false_when_invalid_string_passed() {
+    let note = Note::validate_note("");
+    assert!(!note);
+    let note = Note::validate_note("Ac");
+    assert!(!note);
+    let note = Note::validate_note("H");
+    assert!(!note);
+    let note = Note::validate_note("Ab#");
+    assert!(!note);
+    let note = Note::validate_note("Abbb");
+    assert!(!note);
+  }
+  #[test]
+  fn validate_note_true_when_valid_string_passed_without_variant() {
+    let note = Note::validate_note("A");
+    assert!(note);
+    let note = Note::validate_note("a");
+    assert!(note);
+    let note = Note::validate_note("b");
+    assert!(note);
+    let note = Note::validate_note("B");
+    assert!(note);
+    let note = Note::validate_note("c");
+    assert!(note);
+    let note = Note::validate_note("C");
+    assert!(note);
+    let note = Note::validate_note("d");
+    assert!(note);
+    let note = Note::validate_note("D");
+    assert!(note);
+    let note = Note::validate_note("e");
+    assert!(note);
+    let note = Note::validate_note("E");
+    assert!(note);
+    let note = Note::validate_note("f");
+    assert!(note);
+    let note = Note::validate_note("F");
+    assert!(note);
+    let note = Note::validate_note("g");
+    assert!(note);
+    let note = Note::validate_note("G");
+    assert!(note);
   }
 }
