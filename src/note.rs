@@ -52,6 +52,14 @@ pub enum NotePitchVariant {
 
 // cache intervals
 
+lazy_static! {
+  // check if str has a-g or A-G in one occurrence
+  // check for one or two flats, or one or two sharps
+  static ref NOTE_REGEX: Regex = Regex::new(
+    r"^(?P<note_name>(?i)[a-g]{1})(?P<note_variant>(?-i)(b{1,2})|(#{1,2}))?$"
+  ).unwrap();
+}
+
 // TODO: calculate pitch value 1 - 12 and cache it
 impl Note {
   // TODO: make pitchvariant optional in initializer? 
@@ -71,13 +79,7 @@ impl Note {
 
   fn validate_note(note: &str) -> bool {
     // https://docs.rs/regex/1.4.3/regex/#repetitions
-    lazy_static! {
-      // check if str has a-g or A-G in one occurrence
-      // check for one or two flats, or one or two sharps
-      static ref NOTE_REGEX: Regex = Regex::new(
-        "^(?P<note_name>(?i)[a-g]{1})(?P<note_variant>(?-i)b|#{1,2})?$"
-      ).unwrap();
-    }
+    
     (1..=3).contains(&note.len()) && NOTE_REGEX.is_match(note)
   }
 
@@ -123,9 +125,9 @@ mod validate_note_test {
   }
   #[test]
   fn validate_note_true_when_valid_string_passed_without_variant() {
-    let note = Note::validate_note("A");
-    assert!(note);
     let note = Note::validate_note("a");
+    assert!(note);
+    let note = Note::validate_note("A");
     assert!(note);
     let note = Note::validate_note("b");
     assert!(note);
@@ -150,6 +152,81 @@ mod validate_note_test {
     let note = Note::validate_note("g");
     assert!(note);
     let note = Note::validate_note("G");
+    assert!(note);
+  }
+
+  #[test]
+  fn validate_note_true_when_valid_string_passed_with_variant() {
+    let note = Note::validate_note("ab");
+    assert!(note);
+    let note = Note::validate_note("abb");
+    assert!(note);
+    let note = Note::validate_note("a#");
+    assert!(note);
+    let note = Note::validate_note("a##");
+    assert!(note);
+
+    let note = Note::validate_note("bb");
+    assert!(note);
+    let note = Note::validate_note("bbb");
+    assert!(note);
+    let note = Note::validate_note("b#");
+    assert!(note);
+    let note = Note::validate_note("b##");
+    assert!(note);
+
+    let note = Note::validate_note("bb");
+    assert!(note);
+    let note = Note::validate_note("bbb");
+    assert!(note);
+    let note = Note::validate_note("b#");
+    assert!(note);
+    let note = Note::validate_note("b##");
+    assert!(note);
+
+    let note = Note::validate_note("cb");
+    assert!(note);
+    let note = Note::validate_note("cbb");
+    assert!(note);
+    let note = Note::validate_note("c#");
+    assert!(note);
+    let note = Note::validate_note("c##");
+    assert!(note);
+
+    let note = Note::validate_note("db");
+    assert!(note);
+    let note = Note::validate_note("dbb");
+    assert!(note);
+    let note = Note::validate_note("d#");
+    assert!(note);
+    let note = Note::validate_note("d##");
+    assert!(note);
+
+    let note = Note::validate_note("eb");
+    assert!(note);
+    let note = Note::validate_note("ebb");
+    assert!(note);
+    let note = Note::validate_note("e#");
+    assert!(note);
+    let note = Note::validate_note("e##");
+    assert!(note);
+
+    let note = Note::validate_note("fb");
+    assert!(note);
+    let note = Note::validate_note("fbb");
+    assert!(note);
+    let note = Note::validate_note("f#");
+    assert!(note);
+    let note = Note::validate_note("f##");
+    assert!(note);
+
+    let note = Note::validate_note("gb");
+    assert!(note);
+    let note = Note::validate_note("gbb");
+    assert!(note);
+    let note = Note::validate_note("g#");
+    assert!(note);
+    let note = Note::validate_note("g##");
     assert!(note);
   }
 }
