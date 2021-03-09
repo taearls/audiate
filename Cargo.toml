@@ -11,6 +11,7 @@ regex = "1.4.3"
 lazy_static = "1.4.0"
 
 [dev-dependencies.cargo-husky]
+# https://github.com/rhysd/cargo-husky
 version = "1.5.0"
 default-features = false # Disable features which are enabled by default
 features = ["precommit-hook", "run-cargo-test"]
