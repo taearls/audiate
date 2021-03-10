@@ -1,60 +1,59 @@
 use crate::note::Note;
 
 pub struct Chord<'a> {
-  pub name: String,
-  quality: ChordQuality,
-  root: Note<'a>,
+    pub name: String,
+    quality: ChordQuality,
+    root: Note<'a>,
 }
 
 // the chord quality a chord can be.
 // it describes the root triad in a chord.
 pub enum ChordQuality {
-  Major,
-  Minor,
-  Diminished,
-  Augmented,
+    Major,
+    Minor,
+    Diminished,
+    Augmented,
 }
 
 // how to denote dominant / major seventh ?
-// how to denote suspended chords? 
-// 
+// how to denote suspended chords?
+//
 
 // describes the extensions of the chord.
 // each value includes the previous one.
 // e.g., Ninth includes Seventh and Triad.
 // TODO: more semantic name to describe this enum
 pub enum ChordExtensionKind {
-  Triad,
-  Seventh,
-  Ninth,
-  Eleventh,
-  Thirteenth,
+    Triad,
+    Seventh,
+    Ninth,
+    Eleventh,
+    Thirteenth,
 }
 
 impl<'a> Chord<'a> {
-  // pub fn new(root: &str, quality: ChordQuality) -> Result<Chord, &str> {
+    // pub fn new(root: &str, quality: ChordQuality) -> Result<Chord, &str> {
 
+    //   // if !root.to_lowercase().matches(&['a', 'b', 'c', 'd', 'e', 'f', 'g'])
 
-  //   // if !root.to_lowercase().matches(&['a', 'b', 'c', 'd', 'e', 'f', 'g'])
-    
-  //   // let root = match root.to_lowercase() {
-  //   //   "a"
-  //   // }
-  //   // let name = get_chord_name(&root);
+    //   // let root = match root.to_lowercase() {
+    //   //   "a"
+    //   // }
+    //   // let name = get_chord_name(&root);
 
-  //   // TODO: add fn for grabbing triad + seventh notes
-  //   // let third = find_interval(&root, 4);
-  //   // let fifth = find_interval(&root, 7);
+    //   // TODO: add fn for grabbing triad + seventh notes
+    //   // let third = find_interval(&root, 4);
+    //   // let fifth = find_interval(&root, 7);
 
-  //   // Chord {
-  //   //   name,
-  //   //   quality,
-  //   //   root
-  //   // }
-  // }
-  fn get_chord_name(root: &'a Note) -> &'a str {
-    &root.name
-  }
+    //   // Chord {
+    //   //   name,
+    //   //   quality,
+    //   //   root
+    //   // }
+    // }
+    fn get_chord_name(root: &'a Note) -> &'a str {
+        &root.name
+    }
 }
 
 // fn validate_root(root: &str) -> Option<Note> {
@@ -68,8 +67,7 @@ impl<'a> Chord<'a> {
 //   }
 // }
 
-// get the name of a chord. for now it just returns the name of the root note without any additional description. 
-
+// get the name of a chord. for now it just returns the name of the root note without any additional description.
 
 // fn find_interval(root: &Note, semitones: i8) -> Note {
 //   let name = String::from(&root.name);
