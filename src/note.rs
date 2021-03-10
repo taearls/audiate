@@ -96,9 +96,12 @@ impl<'a> Note<'a> {
   }
 
   fn get_pitch_value(note_name: &str, pitch_variant: NotePitchVariant) -> Option<u8> {
-    let note_name = NOTE_REGEX.captures(note_name).and_then(|cap| {
+    let note_name_capture = NOTE_REGEX.captures(note_name).and_then(|cap| {
       cap.name("note_name").map(|note_name| note_name.as_str())
-    }).unwrap();
+    });
+    if note_name_capture == None { return None }
+    
+    let note_name = note_name_capture.unwrap();
 
     // cycle through from 1-12
     let note_name_pitch_value: u8 = match note_name.to_lowercase().as_str() {
@@ -112,19 +115,27 @@ impl<'a> Note<'a> {
       _ => return None,
     };
 
-    // we add 12 to prevent underflow
-    let temp = note_name_pitch_value + 12 + pitch_variant;
-    match temp % 12 {
-      0 => Some(12),
-      result => Some(result),
-    }
+    Some(note_name_pitch_value + pitch_variant)
   }
 }
 
 impl std::ops::Add<NotePitchVariant> for u8 {
   type Output = Self;
   fn add(self, other: NotePitchVariant) -> Self {
-    self + other
+    let pitch_variant_value: i8 = match other {
+      NotePitchVariant::Flatdbl => -2,
+      NotePitchVariant::Flat => -1,
+      NotePitchVariant::Natural => 0,
+      NotePitchVariant::Sharp => 1,
+      NotePitchVariant::Sharpdbl => 2,
+    };
+
+    // we add 12 to prevent underflow
+    let sum = (self as i8 + 12 + pitch_variant_value) as u8;
+    match sum % 12 {
+      0 => 12,
+      result => result,
+    }
   }
 } 
 
@@ -388,5 +399,34 @@ mod get_pitch_variant_test {
 
     let pitch_variant = Note::get_pitch_variant("G##");
     assert_eq!(pitch_variant, Some(NotePitchVariant::Sharpdbl));
+  }
+}
+
+#[cfg(test)]
+mod get_pitch_value_test {
+  use super::*;
+
+  #[test]
+  fn get_pitch_value_returns_correct_natural_variant() {
+    let pitch_value = Note::get_pitch_value("a", NotePitchVariant::Natural);
+    assert_eq!(pitch_value, Some(1));
+
+    let pitch_value = Note::get_pitch_value("b", NotePitchVariant::Natural);
+    assert_eq!(pitch_value, Some(3));
+
+    let pitch_value = Note::get_pitch_value("c", NotePitchVariant::Natural);
+    assert_eq!(pitch_value, Some(4));
+
+    let pitch_value = Note::get_pitch_value("d", NotePitchVariant::Natural);
+    assert_eq!(pitch_value, Some(6));
+
+    let pitch_value = Note::get_pitch_value("e", NotePitchVariant::Natural);
+    assert_eq!(pitch_value, Some(8));
+
+    let pitch_value = Note::get_pitch_value("f", NotePitchVariant::Natural);
+    assert_eq!(pitch_value, Some(9));
+
+    let pitch_value = Note::get_pitch_value("g", NotePitchVariant::Natural);
+    assert_eq!(pitch_value, Some(11));
   }
 }
