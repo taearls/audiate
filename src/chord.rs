@@ -1,9 +1,9 @@
 use crate::note::Note;
 
-pub struct Chord {
+pub struct Chord<'a> {
   pub name: String,
   quality: ChordQuality,
-  root: Note,
+  root: Note<'a>,
 }
 
 // the chord quality a chord can be.
@@ -31,7 +31,7 @@ pub enum ChordExtensionKind {
   Thirteenth,
 }
 
-impl Chord {
+impl<'a> Chord<'a> {
   // pub fn new(root: &str, quality: ChordQuality) -> Result<Chord, &str> {
 
 
@@ -52,6 +52,9 @@ impl Chord {
   //   //   root
   //   // }
   // }
+  fn get_chord_name(root: &'a Note) -> &'a str {
+    &root.name
+  }
 }
 
 // fn validate_root(root: &str) -> Option<Note> {
@@ -66,9 +69,7 @@ impl Chord {
 // }
 
 // get the name of a chord. for now it just returns the name of the root note without any additional description. 
-fn get_chord_name(root: &Note) -> String {
-  String::from(&root.name)
-}
+
 
 // fn find_interval(root: &Note, semitones: i8) -> Note {
 //   let name = String::from(&root.name);
