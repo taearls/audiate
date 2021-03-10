@@ -64,13 +64,16 @@ impl<'a> Note<'a> {
   pub fn new(note_name: &'a str) -> Option<Self> {
     if !Note::validate_note(note_name) { return None }
     
-    let pitch_variant: NotePitchVariant = Note::get_pitch_variant(note_name);
-    let pitch_value: u8 = Note::get_pitch_value(note_name, pitch_variant);
+    let pitch_variant: Option<NotePitchVariant> = Note::get_pitch_variant(note_name);
+    if pitch_variant == None { return None; }
+
+    let pitch_value: Option<u8> = Note::get_pitch_value(note_name, pitch_variant.unwrap());
+    if pitch_value == None { return None; }
 
     Some(Note {
       name: note_name,
-      pitch_value,
-      pitch_variant,
+      pitch_value: pitch_value.unwrap(),
+      pitch_variant: pitch_variant.unwrap(),
     })
   }
 
@@ -78,26 +81,52 @@ impl<'a> Note<'a> {
     (1..=3).contains(&note.len()) && NOTE_REGEX.is_match(note)
   }
 
-  fn get_pitch_variant(note_name: &str) -> NotePitchVariant {
+  fn get_pitch_variant(note_name: &str) -> Option<NotePitchVariant> {
     let note_variant = NOTE_REGEX.captures(note_name).and_then(|cap| {
       cap.name("note_variant").map(|note_variant| note_variant.as_str())
     });
     match note_variant {
-      Some("b")  => NotePitchVariant::Flat,
-      Some("bb") => NotePitchVariant::Flatdbl,
-      Some("#")  => NotePitchVariant::Sharp,
-      Some("##") => NotePitchVariant::Sharpdbl,
-      _          => NotePitchVariant::Natural,
+      Some("b")  => Some(NotePitchVariant::Flat),
+      Some("bb") => Some(NotePitchVariant::Flatdbl),
+      Some("#")  => Some(NotePitchVariant::Sharp),
+      Some("##") => Some(NotePitchVariant::Sharpdbl),
+      Some(_)    => None,
+      None       => Some(NotePitchVariant::Natural),
     }
   }
 
-  fn get_pitch_value(note_name: &str, pitch_variant: NotePitchVariant) -> u8 {
-    unimplemented!("get pitch value based on note name")
+  fn get_pitch_value(note_name: &str, pitch_variant: NotePitchVariant) -> Option<u8> {
+    let note_name = NOTE_REGEX.captures(note_name).and_then(|cap| {
+      cap.name("note_name").map(|note_name| note_name.as_str())
+    }).unwrap();
+
+    // cycle through from 1-12
+    let note_name_pitch_value: u8 = match note_name.to_lowercase().as_str() {
+      "a" => 1,
+      "b" => 3,
+      "c" => 4,
+      "d" => 6,
+      "e" => 8,
+      "f" => 9,
+      "g" => 11,
+      _ => return None,
+    };
+
+    // we add 12 to prevent underflow
+    let temp = note_name_pitch_value + 12 + pitch_variant;
+    match temp % 12 {
+      0 => Some(12),
+      result => Some(result),
+    }
   }
 }
 
-
-
+impl std::ops::Add<NotePitchVariant> for u8 {
+  type Output = Self;
+  fn add(self, other: NotePitchVariant) -> Self {
+    self + other
+  }
+} 
 
 
 
@@ -244,120 +273,120 @@ mod get_pitch_variant_test {
   #[test]
   fn get_pitch_variant_returns_natural() {
     let pitch_variant = Note::get_pitch_variant("A");
-    assert_eq!(pitch_variant, NotePitchVariant::Natural);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Natural));
 
     let pitch_variant = Note::get_pitch_variant("B");
-    assert_eq!(pitch_variant, NotePitchVariant::Natural);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Natural));
 
     let pitch_variant = Note::get_pitch_variant("C");
-    assert_eq!(pitch_variant, NotePitchVariant::Natural);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Natural));
 
     let pitch_variant = Note::get_pitch_variant("D");
-    assert_eq!(pitch_variant, NotePitchVariant::Natural);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Natural));
 
     let pitch_variant = Note::get_pitch_variant("E");
-    assert_eq!(pitch_variant, NotePitchVariant::Natural);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Natural));
 
     let pitch_variant = Note::get_pitch_variant("F");
-    assert_eq!(pitch_variant, NotePitchVariant::Natural);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Natural));
 
     let pitch_variant = Note::get_pitch_variant("G");
-    assert_eq!(pitch_variant, NotePitchVariant::Natural);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Natural));
   }
 
   #[test]
   fn get_pitch_variant_returns_flat() {
     let pitch_variant = Note::get_pitch_variant("Ab");
-    assert_eq!(pitch_variant, NotePitchVariant::Flat);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Flat));
 
     let pitch_variant = Note::get_pitch_variant("Bb");
-    assert_eq!(pitch_variant, NotePitchVariant::Flat);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Flat));
 
     let pitch_variant = Note::get_pitch_variant("Cb");
-    assert_eq!(pitch_variant, NotePitchVariant::Flat);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Flat));
 
     let pitch_variant = Note::get_pitch_variant("Db");
-    assert_eq!(pitch_variant, NotePitchVariant::Flat);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Flat));
 
     let pitch_variant = Note::get_pitch_variant("Eb");
-    assert_eq!(pitch_variant, NotePitchVariant::Flat);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Flat));
 
     let pitch_variant = Note::get_pitch_variant("Fb");
-    assert_eq!(pitch_variant, NotePitchVariant::Flat);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Flat));
 
     let pitch_variant = Note::get_pitch_variant("Gb");
-    assert_eq!(pitch_variant, NotePitchVariant::Flat);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Flat));
   }
 
   #[test]
   fn get_pitch_variant_returns_flatdbl() {
     let pitch_variant = Note::get_pitch_variant("Abb");
-    assert_eq!(pitch_variant, NotePitchVariant::Flatdbl);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Flatdbl));
 
     let pitch_variant = Note::get_pitch_variant("Bbb");
-    assert_eq!(pitch_variant, NotePitchVariant::Flatdbl);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Flatdbl));
 
     let pitch_variant = Note::get_pitch_variant("Cbb");
-    assert_eq!(pitch_variant, NotePitchVariant::Flatdbl);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Flatdbl));
 
     let pitch_variant = Note::get_pitch_variant("Dbb");
-    assert_eq!(pitch_variant, NotePitchVariant::Flatdbl);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Flatdbl));
 
     let pitch_variant = Note::get_pitch_variant("Ebb");
-    assert_eq!(pitch_variant, NotePitchVariant::Flatdbl);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Flatdbl));
 
     let pitch_variant = Note::get_pitch_variant("Fbb");
-    assert_eq!(pitch_variant, NotePitchVariant::Flatdbl);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Flatdbl));
 
     let pitch_variant = Note::get_pitch_variant("Gbb");
-    assert_eq!(pitch_variant, NotePitchVariant::Flatdbl);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Flatdbl));
   }
 
   #[test]
   fn get_pitch_variant_returns_sharp() {
     let pitch_variant = Note::get_pitch_variant("A#");
-    assert_eq!(pitch_variant, NotePitchVariant::Sharp);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Sharp));
 
     let pitch_variant = Note::get_pitch_variant("B#");
-    assert_eq!(pitch_variant, NotePitchVariant::Sharp);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Sharp));
 
     let pitch_variant = Note::get_pitch_variant("C#");
-    assert_eq!(pitch_variant, NotePitchVariant::Sharp);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Sharp));
 
     let pitch_variant = Note::get_pitch_variant("D#");
-    assert_eq!(pitch_variant, NotePitchVariant::Sharp);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Sharp));
 
     let pitch_variant = Note::get_pitch_variant("E#");
-    assert_eq!(pitch_variant, NotePitchVariant::Sharp);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Sharp));
 
     let pitch_variant = Note::get_pitch_variant("F#");
-    assert_eq!(pitch_variant, NotePitchVariant::Sharp);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Sharp));
 
     let pitch_variant = Note::get_pitch_variant("G#");
-    assert_eq!(pitch_variant, NotePitchVariant::Sharp);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Sharp));
   }
 
   #[test]
   fn get_pitch_variant_returns_sharpdbl() {
     let pitch_variant = Note::get_pitch_variant("A##");
-    assert_eq!(pitch_variant, NotePitchVariant::Sharpdbl);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Sharpdbl));
 
     let pitch_variant = Note::get_pitch_variant("B##");
-    assert_eq!(pitch_variant, NotePitchVariant::Sharpdbl);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Sharpdbl));
 
     let pitch_variant = Note::get_pitch_variant("C##");
-    assert_eq!(pitch_variant, NotePitchVariant::Sharpdbl);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Sharpdbl));
 
     let pitch_variant = Note::get_pitch_variant("D##");
-    assert_eq!(pitch_variant, NotePitchVariant::Sharpdbl);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Sharpdbl));
 
     let pitch_variant = Note::get_pitch_variant("E##");
-    assert_eq!(pitch_variant, NotePitchVariant::Sharpdbl);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Sharpdbl));
 
     let pitch_variant = Note::get_pitch_variant("F##");
-    assert_eq!(pitch_variant, NotePitchVariant::Sharpdbl);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Sharpdbl));
 
     let pitch_variant = Note::get_pitch_variant("G##");
-    assert_eq!(pitch_variant, NotePitchVariant::Sharpdbl);
+    assert_eq!(pitch_variant, Some(NotePitchVariant::Sharpdbl));
   }
 }
