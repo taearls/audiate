@@ -1,56 +1,21 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 
-// TODO: be able to construct a note with just its name.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Note<'a> {
     pub name: &'a str,
-    // pub letter: NoteLetter,
     pitch_value: u8,
     pitch_variant: NotePitchVariant,
-    // pitch: NotePitch
 }
 
-// use this value to calculate the pitch from a letter
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum NotePitchVariant {
-    Flatdbl = -2,
-    Flat = -1,
-    Natural = 0,
-    Sharp = 1,
-    Sharpdbl = 2,
+    Flatdbl,
+    Flat,
+    Natural,
+    Sharp,
+    Sharpdbl,
 }
-
-//  Because most songs are in the key of C,
-//  that is the lowest value in this enum that everything else is based around.
-//  The pitch values are relative to C being the root.
-//  only use natural letter values to measure pitch.
-//  variants can describe changes from the root.
-//
-//  to get Db, subtract 1 from D.
-//  to get D#, add 1 to D.
-// #[derive(Debug, Copy, Clone)]
-// pub enum NoteLetter {
-//   C = 1,
-//   D = 3,
-//   E = 5,
-//   F = 6,
-//   G = 8,
-//   A = 10,
-//   B = 12,
-// }
-
-// Note should have
-// letter -> A - G with numeric values
-// variant ->
-// flat - natural - sharp - double flat - double sharp
-
-// pitch value -> calculated field -> 1-12
-// letter + variant -> pitch value
-
-// name -> String representation derived from other info
-
-// cache intervals
 
 lazy_static! {
   // check if str has a-g or A-G in one occurrence
@@ -66,20 +31,13 @@ impl<'a> Note<'a> {
             return None;
         }
 
-        let pitch_variant: Option<NotePitchVariant> = Note::get_pitch_variant(note_name);
-        if pitch_variant.is_none() {
-            return None;
-        }
-
-        let pitch_value: Option<u8> = Note::get_pitch_value(note_name, pitch_variant.unwrap());
-        if pitch_value.is_none() {
-            return None;
-        }
+        let pitch_variant: NotePitchVariant = Note::get_pitch_variant(note_name)?;
+        let pitch_value: u8 = Note::get_pitch_value(note_name, pitch_variant)?;
 
         Some(Note {
             name: note_name,
-            pitch_value: pitch_value.unwrap(),
-            pitch_variant: pitch_variant.unwrap(),
+            pitch_value,
+            pitch_variant,
         })
     }
 
@@ -103,14 +61,9 @@ impl<'a> Note<'a> {
     }
 
     fn get_pitch_value(note_name: &str, pitch_variant: NotePitchVariant) -> Option<u8> {
-        let note_name_capture = NOTE_REGEX
+        let note_name = NOTE_REGEX
             .captures(note_name)
-            .and_then(|cap| cap.name("note_name").map(|note_name| note_name.as_str()));
-        if note_name_capture.is_none() {
-            return None;
-        }
-
-        let note_name = note_name_capture.unwrap();
+            .and_then(|cap| cap.name("note_name").map(|note_name| note_name.as_str()))?;
 
         // cycle through from 1-12
         let note_name_pitch_value: u8 = match note_name.to_lowercase().as_str() {
@@ -141,9 +94,11 @@ impl std::ops::Add<NotePitchVariant> for u8 {
 
         // we add 12 to prevent underflow
         let sum = (self as i8 + 12 + pitch_variant_value) as u8;
+
+        // we want only pitch values to be in the range of 1-12 inclusive
         match sum % 12 {
             0 => 12,
-            result => result,
+            sum => sum,
         }
     }
 }
