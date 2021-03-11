@@ -42,9 +42,9 @@ Configure this as a general purpose library that can be exported to external pro
   - [ ] Readme updates
   - [ ] Front page of crates.io with overview
  
-### Road Map
+### Future Improvements
 
-An ongoing and incomplete checklist of new features to add to this library.
+An ongoing and incomplete checklist of new features to add to this library after publishing version 0.01 to crates.io 
 
 - [ ] Chord Module
   - [ ] ninths
