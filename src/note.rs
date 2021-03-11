@@ -17,6 +17,7 @@ pub enum NotePitchVariant {
     Sharpdbl,
 }
 
+// global static regex to parse a note from a string slice that's only compiled once
 lazy_static! {
   // check if str has a-g or A-G in one occurrence
   // check for one or two flats, or one or two sharps
@@ -27,7 +28,7 @@ lazy_static! {
 
 impl<'a> Note<'a> {
     pub fn new(note_name: &'a str) -> Option<Self> {
-        if !Note::validate_note(note_name) {
+        if !Note::is_note(note_name) {
             return None;
         }
 
@@ -41,11 +42,13 @@ impl<'a> Note<'a> {
         })
     }
 
-    fn validate_note(note: &str) -> bool {
+    fn is_note(note: &str) -> bool {
         (1..=3).contains(&note.len()) && NOTE_REGEX.is_match(note)
     }
 
     fn get_pitch_variant(note_name: &str) -> Option<NotePitchVariant> {
+        if !Note::is_note(note_name) { return None; }
+
         let note_variant = NOTE_REGEX.captures(note_name).and_then(|cap| {
             cap.name("note_variant")
                 .map(|note_variant| note_variant.as_str())
@@ -61,6 +64,8 @@ impl<'a> Note<'a> {
     }
 
     fn get_pitch_value(note_name: &str, pitch_variant: NotePitchVariant) -> Option<u8> {
+        if !Note::is_note(note_name) { return None; }
+
         let note_name = NOTE_REGEX
             .captures(note_name)
             .and_then(|cap| cap.name("note_name").map(|note_name| note_name.as_str()))?;
@@ -103,134 +108,86 @@ impl std::ops::Add<NotePitchVariant> for u8 {
     }
 }
 
-// UNIT TESTS
+////////////////
+// UNIT TESTS //
+////////////////
 
 // TODO:
 // - write macros to reduce repetition
+// - create helper fn to return a static str of invalid note_name values
 // - test for none values
 
 #[cfg(test)]
-mod validate_note_test {
+mod test_helper_fns {
+    pub fn natural_note_name_str() -> &'static str {
+        "a b c d e f g A B C D E F G"
+    }
+    pub fn flat_note_name_str() -> &'static str {
+        "ab bb cb db eb fb gb Ab Bb Cb Db Eb Fb Gb"
+    }
+    pub fn flatdbl_note_name_str() -> &'static str {
+        "abb bbb cbb dbb ebb fbb gbb Abb Bbb Cbb Dbb Ebb Fbb Gbb"
+    }
+    pub fn sharp_note_name_str() -> &'static str {
+        "a# b# c# d# e# f# g# A# B# C# D# E# F# G#"
+    }
+    pub fn sharpdbl_note_name_str() -> &'static str {
+        "a## b## c## d## e## f## g## A## B## C## D## E## F## G##"
+    }
+}
+
+#[cfg(test)]
+mod is_note_test {
     use super::*;
 
     #[test]
-    fn validate_note_false_when_invalid_string_passed() {
-        let note = Note::validate_note("");
-        assert!(!note);
-        let note = Note::validate_note("Ac");
-        assert!(!note);
-        let note = Note::validate_note("H");
-        assert!(!note);
-        let note = Note::validate_note("Ab#");
-        assert!(!note);
-        let note = Note::validate_note("Abbb");
-        assert!(!note);
+    fn is_note_false_when_invalid_string_passed() {
+        // TODO: create helper_fn to reuse an invalid note name str
+        let note = Note::is_note("");
+        assert!(!note, " is not a note");
+        let note = Note::is_note("Ac");
+        assert!(!note, "Ac is not a note");
+        let note = Note::is_note("H");
+        assert!(!note, "H is not a note");
+        let note = Note::is_note("Ab#");
+        assert!(!note, "Ab# is not a note");
+        let note = Note::is_note("Abbb");
+        assert!(!note, "Abbb is not a note");
     }
     #[test]
-    fn validate_note_true_when_valid_string_passed_without_variant() {
-        let note = Note::validate_note("a");
-        assert!(note);
-        let note = Note::validate_note("A");
-        assert!(note);
-        let note = Note::validate_note("b");
-        assert!(note);
-        let note = Note::validate_note("B");
-        assert!(note);
-        let note = Note::validate_note("c");
-        assert!(note);
-        let note = Note::validate_note("C");
-        assert!(note);
-        let note = Note::validate_note("d");
-        assert!(note);
-        let note = Note::validate_note("D");
-        assert!(note);
-        let note = Note::validate_note("e");
-        assert!(note);
-        let note = Note::validate_note("E");
-        assert!(note);
-        let note = Note::validate_note("f");
-        assert!(note);
-        let note = Note::validate_note("F");
-        assert!(note);
-        let note = Note::validate_note("g");
-        assert!(note);
-        let note = Note::validate_note("G");
-        assert!(note);
+    fn is_note_true_when_valid_string_passed_with_natural_variant() {
+        for str in test_helper_fns::natural_note_name_str().split(" ") {
+            let note = Note::is_note(str);
+            assert!(note, "{} is a note", str);
+        }
     }
-
     #[test]
-    fn validate_note_true_when_valid_string_passed_with_variant() {
-        let note = Note::validate_note("ab");
-        assert!(note);
-        let note = Note::validate_note("abb");
-        assert!(note);
-        let note = Note::validate_note("a#");
-        assert!(note);
-        let note = Note::validate_note("a##");
-        assert!(note);
-
-        let note = Note::validate_note("bb");
-        assert!(note);
-        let note = Note::validate_note("bbb");
-        assert!(note);
-        let note = Note::validate_note("b#");
-        assert!(note);
-        let note = Note::validate_note("b##");
-        assert!(note);
-
-        let note = Note::validate_note("bb");
-        assert!(note);
-        let note = Note::validate_note("bbb");
-        assert!(note);
-        let note = Note::validate_note("b#");
-        assert!(note);
-        let note = Note::validate_note("b##");
-        assert!(note);
-
-        let note = Note::validate_note("cb");
-        assert!(note);
-        let note = Note::validate_note("cbb");
-        assert!(note);
-        let note = Note::validate_note("c#");
-        assert!(note);
-        let note = Note::validate_note("c##");
-        assert!(note);
-
-        let note = Note::validate_note("db");
-        assert!(note);
-        let note = Note::validate_note("dbb");
-        assert!(note);
-        let note = Note::validate_note("d#");
-        assert!(note);
-        let note = Note::validate_note("d##");
-        assert!(note);
-
-        let note = Note::validate_note("eb");
-        assert!(note);
-        let note = Note::validate_note("ebb");
-        assert!(note);
-        let note = Note::validate_note("e#");
-        assert!(note);
-        let note = Note::validate_note("e##");
-        assert!(note);
-
-        let note = Note::validate_note("fb");
-        assert!(note);
-        let note = Note::validate_note("fbb");
-        assert!(note);
-        let note = Note::validate_note("f#");
-        assert!(note);
-        let note = Note::validate_note("f##");
-        assert!(note);
-
-        let note = Note::validate_note("gb");
-        assert!(note);
-        let note = Note::validate_note("gbb");
-        assert!(note);
-        let note = Note::validate_note("g#");
-        assert!(note);
-        let note = Note::validate_note("g##");
-        assert!(note);
+    fn is_note_true_when_valid_string_passed_with_flat_variant() {
+        for str in test_helper_fns::flat_note_name_str().split(" ") {
+            let note = Note::is_note(str);
+            assert!(note, "{} is a note", str);
+        }
+    }
+    #[test]
+    fn is_note_true_when_valid_string_passed_with_flatdbl_variant() {
+        for str in test_helper_fns::flatdbl_note_name_str().split(" ") {
+            let note = Note::is_note(str);
+            assert!(note, "{} is a note", str);
+        }
+    }
+    #[test]
+    fn is_note_true_when_valid_string_passed_with_sharp_variant() {
+        for str in test_helper_fns::sharp_note_name_str().split(" ") {
+            let note = Note::is_note(str);
+            assert!(note, "{} is a note", str);
+        }
+    }
+    #[test]
+    fn is_note_true_when_valid_string_passed_with_sharpdbl_variant() {
+        for str in test_helper_fns::sharpdbl_note_name_str().split(" ") {
+            let note = Note::is_note(str);
+            assert!(note, "{} is a note", str);
+        }
     }
 }
 
@@ -240,122 +197,38 @@ mod get_pitch_variant_test {
 
     #[test]
     fn get_pitch_variant_returns_natural() {
-        let pitch_variant = Note::get_pitch_variant("A");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Natural));
-
-        let pitch_variant = Note::get_pitch_variant("B");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Natural));
-
-        let pitch_variant = Note::get_pitch_variant("C");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Natural));
-
-        let pitch_variant = Note::get_pitch_variant("D");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Natural));
-
-        let pitch_variant = Note::get_pitch_variant("E");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Natural));
-
-        let pitch_variant = Note::get_pitch_variant("F");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Natural));
-
-        let pitch_variant = Note::get_pitch_variant("G");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Natural));
+        for str in test_helper_fns::natural_note_name_str().split(" ") {
+            let pitch_variant = Note::get_pitch_variant(str);
+            assert_eq!(pitch_variant, Some(NotePitchVariant::Natural));
+        }
     }
-
     #[test]
     fn get_pitch_variant_returns_flat() {
-        let pitch_variant = Note::get_pitch_variant("Ab");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Flat));
-
-        let pitch_variant = Note::get_pitch_variant("Bb");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Flat));
-
-        let pitch_variant = Note::get_pitch_variant("Cb");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Flat));
-
-        let pitch_variant = Note::get_pitch_variant("Db");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Flat));
-
-        let pitch_variant = Note::get_pitch_variant("Eb");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Flat));
-
-        let pitch_variant = Note::get_pitch_variant("Fb");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Flat));
-
-        let pitch_variant = Note::get_pitch_variant("Gb");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Flat));
+        for str in test_helper_fns::flat_note_name_str().split(" ") {
+            let pitch_variant = Note::get_pitch_variant(str);
+            assert_eq!(pitch_variant, Some(NotePitchVariant::Flat));
+        }
     }
-
     #[test]
     fn get_pitch_variant_returns_flatdbl() {
-        let pitch_variant = Note::get_pitch_variant("Abb");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Flatdbl));
-
-        let pitch_variant = Note::get_pitch_variant("Bbb");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Flatdbl));
-
-        let pitch_variant = Note::get_pitch_variant("Cbb");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Flatdbl));
-
-        let pitch_variant = Note::get_pitch_variant("Dbb");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Flatdbl));
-
-        let pitch_variant = Note::get_pitch_variant("Ebb");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Flatdbl));
-
-        let pitch_variant = Note::get_pitch_variant("Fbb");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Flatdbl));
-
-        let pitch_variant = Note::get_pitch_variant("Gbb");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Flatdbl));
+        for str in test_helper_fns::flatdbl_note_name_str().split(" ") {
+            let pitch_variant = Note::get_pitch_variant(str);
+            assert_eq!(pitch_variant, Some(NotePitchVariant::Flatdbl));
+        }
     }
-
     #[test]
     fn get_pitch_variant_returns_sharp() {
-        let pitch_variant = Note::get_pitch_variant("A#");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Sharp));
-
-        let pitch_variant = Note::get_pitch_variant("B#");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Sharp));
-
-        let pitch_variant = Note::get_pitch_variant("C#");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Sharp));
-
-        let pitch_variant = Note::get_pitch_variant("D#");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Sharp));
-
-        let pitch_variant = Note::get_pitch_variant("E#");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Sharp));
-
-        let pitch_variant = Note::get_pitch_variant("F#");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Sharp));
-
-        let pitch_variant = Note::get_pitch_variant("G#");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Sharp));
+        for str in test_helper_fns::sharp_note_name_str().split(" ") {
+            let pitch_variant = Note::get_pitch_variant(str);
+            assert_eq!(pitch_variant, Some(NotePitchVariant::Sharp));
+        }
     }
-
     #[test]
     fn get_pitch_variant_returns_sharpdbl() {
-        let pitch_variant = Note::get_pitch_variant("A##");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Sharpdbl));
-
-        let pitch_variant = Note::get_pitch_variant("B##");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Sharpdbl));
-
-        let pitch_variant = Note::get_pitch_variant("C##");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Sharpdbl));
-
-        let pitch_variant = Note::get_pitch_variant("D##");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Sharpdbl));
-
-        let pitch_variant = Note::get_pitch_variant("E##");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Sharpdbl));
-
-        let pitch_variant = Note::get_pitch_variant("F##");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Sharpdbl));
-
-        let pitch_variant = Note::get_pitch_variant("G##");
-        assert_eq!(pitch_variant, Some(NotePitchVariant::Sharpdbl));
+        for str in test_helper_fns::sharpdbl_note_name_str().split(" ") {
+            let pitch_variant = Note::get_pitch_variant(str);
+            assert_eq!(pitch_variant, Some(NotePitchVariant::Sharpdbl));
+        } 
     }
 }
 
