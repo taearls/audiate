@@ -1,7 +1,7 @@
 use crate::note::Note;
 
 pub struct Chord<'a> {
-    pub name: String,
+    pub name: &'a str,
     quality: ChordQuality,
     root: Note<'a>,
 }
@@ -33,50 +33,13 @@ pub enum ChordExtensionKind {
 
 impl<'a> Chord<'a> {
     // pub fn new(root: &str, quality: ChordQuality) -> Result<Chord, &str> {
-
-    //   // if !root.to_lowercase().matches(&['a', 'b', 'c', 'd', 'e', 'f', 'g'])
-
-    //   // let root = match root.to_lowercase() {
-    //   //   "a"
-    //   // }
-    //   // let name = get_chord_name(&root);
-
-    //   // TODO: add fn for grabbing triad + seventh notes
-    //   // let third = find_interval(&root, 4);
-    //   // let fifth = find_interval(&root, 7);
-
-    //   // Chord {
-    //   //   name,
-    //   //   quality,
-    //   //   root
-    //   // }
+      // Chord {
+      //   name,
+      //   quality,
+      //   root
+      // }
     // }
     fn get_chord_name(root: &'a Note) -> &'a str {
         &root.name
     }
 }
-
-// fn validate_root(root: &str) -> Option<Note> {
-//   if root.get(0)
-//          .expect("root note cannot be empty string slice")
-//          .matches(|ch| ch >= 'a' && ch <= 'g') {
-//             Note::new(root)
-//          }
-//   else {
-//     None
-//   }
-// }
-
-// get the name of a chord. for now it just returns the name of the root note without any additional description.
-
-// fn find_interval(root: &Note, semitones: i8) -> Note {
-//   let name = String::from(&root.name);
-//   let letter = root.letter;
-//   // let pitch = root.pitch;
-//   let variant = root.variant;
-//   Note {
-//     name,
-//     letter,
-//     variant,
-//   }
-// }
