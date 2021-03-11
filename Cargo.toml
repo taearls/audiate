@@ -1,5 +1,5 @@
 [package]
-name = "rust-arpeggiator"
+name = "audiate"
 version = "0.1.0"
 authors = ["Tyler Earls <tyler.a.earls@gmail.com>"]
 edition = "2018"
