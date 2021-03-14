@@ -4,14 +4,11 @@ version = "0.1.0"
 authors = ["Tyler Earls <tyler.a.earls@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 regex = "1.4.3"
 lazy_static = "1.4.0"
 
 [dev-dependencies.cargo-husky]
-# https://github.com/rhysd/cargo-husky
 version = "1.5.0"
-default-features = false # Disable features which are enabled by default
+default-features = false
 features = ["precommit-hook", "run-cargo-test"]
