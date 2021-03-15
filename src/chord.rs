@@ -1,13 +1,15 @@
 use crate::note::Note;
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct Chord {
-    pub name: String,
+    name: String,
     quality: ChordQuality,
     root: Note,
 }
 
 // the chord quality a chord can be.
 // it describes the root triad in a chord.
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ChordQuality {
     Major,
     Minor,
@@ -39,7 +41,13 @@ impl Chord {
       //   root
       // }
     // }
-    pub fn name(root: Note) -> String {
-        root.name
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+    pub fn quality(&self) -> ChordQuality {
+        self.quality
+    }
+    pub fn root(&self) -> &str {
+        &self.root.name()
     }
 }

@@ -3,7 +3,7 @@ use regex::Regex;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Note {
-    pub name: String,
+    name: String,
     pitch_value: u8,
     pitch_variant: NotePitchVariant,
 }
@@ -42,12 +42,20 @@ impl Note {
         })
     }
 
-    fn is_note(note: &str) -> bool {
-        (1..=3).contains(&note.len()) && NOTE_REGEX.is_match(note)
-    }
-
     pub fn name(&self) -> &str {
         &self.name
+    }
+
+    pub fn pitch_value(&self) -> u8 {
+        self.pitch_value
+    }
+
+    pub fn pitch_variant(&self) -> NotePitchVariant {
+        self.pitch_variant
+    }
+
+    fn is_note(note: &str) -> bool {
+        (1..=3).contains(&note.len()) && NOTE_REGEX.is_match(note)
     }
 
     fn calc_pitch_variant(note_name: &str) -> Option<NotePitchVariant> {
