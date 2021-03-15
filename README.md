@@ -1,6 +1,6 @@
 # Audiate
 
-Audiate is a library that allows you to generate notes, chords, and scales. It utilizes the math inherent to music theory to create natural conjugations.
+Audiate is a library that allows you to generate notes, chords, and scales. It utilizes the math inherent to music theory to calculate notes with enharmonic correctness.
 
 ## Usage
 
@@ -12,24 +12,24 @@ Audiate is a library that allows you to generate notes, chords, and scales. It u
 
 A list of items that need to be completed before the first publish to crates.io
 
-Configure this as a general purpose library that can be exported to external projects like a CLI tool or web app.
+- [x] Configure this as library, not binary application
 
 - [ ] Note module
   - [x] instantiate new
+  - [x] getter methods
   - [ ] interval method
-  - [ ] getter methods
   - [ ] unit test for none values (private fns)
   - [ ] integration tests (pub fns like new)
 
 - [ ] Chord Module
   - [ ] instantiate new
+  - [ ] getter methods
   - [ ] interval method (e.g., get fifth chord from root like G Major -> D Major)
   - [ ] notes method to get vec of notes
   - [ ] triads
   - [ ] sevenths
 
 - [ ] Scale Module
-  - [ ] new
   - [ ] Major
   - [ ] Minor
   - [ ] Modes
@@ -61,3 +61,4 @@ An ongoing and incomplete checklist of new features to add to this library after
   - [ ] Whole Tone
   - [ ] Whole-Half
   - [ ] Half-Whole
+  - [ ] Chromatic
