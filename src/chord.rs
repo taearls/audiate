@@ -1,9 +1,9 @@
 use crate::note::Note;
 
-pub struct Chord<'a> {
-    pub name: &'a str,
+pub struct Chord {
+    pub name: String,
     quality: ChordQuality,
-    root: Note<'a>,
+    root: Note,
 }
 
 // the chord quality a chord can be.
@@ -31,7 +31,7 @@ pub enum ChordExtensionKind {
     Thirteenth,
 }
 
-impl<'a> Chord<'a> {
+impl Chord {
     // pub fn new(root: &str, quality: ChordQuality) -> Result<Chord, &str> {
       // Chord {
       //   name,
@@ -39,7 +39,7 @@ impl<'a> Chord<'a> {
       //   root
       // }
     // }
-    fn get_chord_name(root: &'a Note) -> &'a str {
-        &root.name
+    pub fn name(root: Note) -> String {
+        root.name
     }
 }
