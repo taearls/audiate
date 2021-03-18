@@ -245,35 +245,35 @@ mod is_note_test {
     }
     #[test]
     fn is_note_true_when_valid_string_passed_with_natural_variant() {
-        for str in test_helper_fns::natural_note_name_str().split(" ") {
+        for str in test_helper_fns::natural_note_name_str().split(' ') {
             let note = Note::is_note(str);
             assert!(note, "{} is a note", str);
         }
     }
     #[test]
     fn is_note_true_when_valid_string_passed_with_flat_variant() {
-        for str in test_helper_fns::flat_note_name_str().split(" ") {
+        for str in test_helper_fns::flat_note_name_str().split(' ') {
             let note = Note::is_note(str);
             assert!(note, "{} is a note", str);
         }
     }
     #[test]
     fn is_note_true_when_valid_string_passed_with_flatdbl_variant() {
-        for str in test_helper_fns::flatdbl_note_name_str().split(" ") {
+        for str in test_helper_fns::flatdbl_note_name_str().split(' ') {
             let note = Note::is_note(str);
             assert!(note, "{} is a note", str);
         }
     }
     #[test]
     fn is_note_true_when_valid_string_passed_with_sharp_variant() {
-        for str in test_helper_fns::sharp_note_name_str().split(" ") {
+        for str in test_helper_fns::sharp_note_name_str().split(' ') {
             let note = Note::is_note(str);
             assert!(note, "{} is a note", str);
         }
     }
     #[test]
     fn is_note_true_when_valid_string_passed_with_sharpdbl_variant() {
-        for str in test_helper_fns::sharpdbl_note_name_str().split(" ") {
+        for str in test_helper_fns::sharpdbl_note_name_str().split(' ') {
             let note = Note::is_note(str);
             assert!(note, "{} is a note", str);
         }
@@ -286,35 +286,35 @@ mod calc_pitch_variant_test {
 
     #[test]
     fn calc_pitch_variant_returns_natural() {
-        for str in test_helper_fns::natural_note_name_str().split(" ") {
+        for str in test_helper_fns::natural_note_name_str().split(' ') {
             let pitch_variant = Note::calc_pitch_variant(str);
             assert_eq!(pitch_variant, Some(NotePitchVariant::Natural));
         }
     }
     #[test]
     fn calc_pitch_variant_returns_flat() {
-        for str in test_helper_fns::flat_note_name_str().split(" ") {
+        for str in test_helper_fns::flat_note_name_str().split(' ') {
             let pitch_variant = Note::calc_pitch_variant(str);
             assert_eq!(pitch_variant, Some(NotePitchVariant::Flat));
         }
     }
     #[test]
     fn calc_pitch_variant_returns_flatdbl() {
-        for str in test_helper_fns::flatdbl_note_name_str().split(" ") {
+        for str in test_helper_fns::flatdbl_note_name_str().split(' ') {
             let pitch_variant = Note::calc_pitch_variant(str);
             assert_eq!(pitch_variant, Some(NotePitchVariant::Flatdbl));
         }
     }
     #[test]
     fn calc_pitch_variant_returns_sharp() {
-        for str in test_helper_fns::sharp_note_name_str().split(" ") {
+        for str in test_helper_fns::sharp_note_name_str().split(' ') {
             let pitch_variant = Note::calc_pitch_variant(str);
             assert_eq!(pitch_variant, Some(NotePitchVariant::Sharp));
         }
     }
     #[test]
     fn calc_pitch_variant_returns_sharpdbl() {
-        for str in test_helper_fns::sharpdbl_note_name_str().split(" ") {
+        for str in test_helper_fns::sharpdbl_note_name_str().split(' ') {
             let pitch_variant = Note::calc_pitch_variant(str);
             assert_eq!(pitch_variant, Some(NotePitchVariant::Sharpdbl));
         }
