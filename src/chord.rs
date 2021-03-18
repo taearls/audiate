@@ -34,13 +34,6 @@ pub enum ChordExtensionKind {
 }
 
 impl Chord {
-    // pub fn new(root: &str, quality: ChordQuality) -> Result<Chord, &str> {
-      // Chord {
-      //   name,
-      //   quality,
-      //   root
-      // }
-    // }
     pub fn name(&self) -> &str {
         &self.name
     }
