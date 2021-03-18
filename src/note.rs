@@ -85,7 +85,7 @@ impl Note {
             11 => String::from("G"),
             _ => unreachable!(),
         };
-        
+
         let pitch_variant = Note::calc_pitch_variant(&name).unwrap();
         Note {
             name,
@@ -105,13 +105,14 @@ impl Note {
     pub fn pitch_variant(&self) -> NotePitchVariant {
         self.pitch_variant
     }
-
     fn is_note(note: &str) -> bool {
         (1..=3).contains(&note.len()) && NOTE_REGEX.is_match(note)
     }
 
     fn calc_pitch_variant(note_name: &str) -> Option<NotePitchVariant> {
-        if !Note::is_note(note_name) { return None; }
+        if !Note::is_note(note_name) {
+            return None;
+        }
 
         let note_variant = NOTE_REGEX.captures(note_name).and_then(|cap| {
             cap.name("note_variant")
@@ -128,7 +129,9 @@ impl Note {
     }
 
     fn calc_pitch_value(note_name: &str, pitch_variant: NotePitchVariant) -> Option<u8> {
-        if !Note::is_note(note_name) { return None; }
+        if !Note::is_note(note_name) {
+            return None;
+        }
 
         let note_name = NOTE_REGEX
             .captures(note_name)
@@ -314,7 +317,7 @@ mod calc_pitch_variant_test {
         for str in test_helper_fns::sharpdbl_note_name_str().split(" ") {
             let pitch_variant = Note::calc_pitch_variant(str);
             assert_eq!(pitch_variant, Some(NotePitchVariant::Sharpdbl));
-        } 
+        }
     }
 }
 
