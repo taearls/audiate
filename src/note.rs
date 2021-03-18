@@ -17,6 +17,33 @@ pub enum NotePitchVariant {
     Sharpdbl,
 }
 
+pub enum NotePitchInterval {
+    // PerfectUnison,
+    MinorSecond,
+    MajorSecond,
+    MinorThird,
+    MajorThird,
+    PerfectFourth,
+    AugmentedFourth,
+    DiminishedFifth,
+    PerfectFifth,
+    MinorSixth,
+    MajorSixth,
+    MinorSeventh,
+    MajorSeventh,
+    // Octave,
+    // MinorNinth,
+    // MajorNinth,
+    // MinorTenth,
+    // MajorTenth,
+    // MinorEleventh,
+    // MajorEleventh,
+    // MinorTwelfth,
+    // MajorTwelfth,
+    // MinorThirteenth,
+    // MajorThirteenth,
+}
+
 // global static regex to parse a note from a string slice that's only compiled once
 lazy_static! {
   // check if str has a-g or A-G in one occurrence
@@ -27,7 +54,7 @@ lazy_static! {
 }
 
 impl Note {
-    pub fn new(note_name: &str) -> Option<Note> {
+    pub fn new(note_name: &str) -> Option<Self> {
         if !Note::is_note(note_name) {
             return None;
         }
@@ -40,6 +67,31 @@ impl Note {
             pitch_value,
             pitch_variant,
         })
+    }
+
+    pub fn relative_by_interval(&self, interval: NotePitchInterval) -> Self {
+        let pitch_value = self.pitch_value() + interval;
+
+        // TODO: figure out how to use original note name to determine which note name to assign based on pitch_value
+
+        // is it possible to use an iterator with an enum to my benefit here?
+        let name = match pitch_value {
+            1 => String::from("A"),
+            3 => String::from("B"),
+            4 => String::from("C"),
+            6 => String::from("D"),
+            8 => String::from("E"),
+            9 => String::from("F"),
+            11 => String::from("G"),
+            _ => unreachable!(),
+        };
+        
+        let pitch_variant = Note::calc_pitch_variant(&name).unwrap();
+        Note {
+            name,
+            pitch_value,
+            pitch_variant,
+        }
     }
 
     pub fn name(&self) -> &str {
@@ -117,6 +169,28 @@ impl std::ops::Add<NotePitchVariant> for u8 {
             0 => 12,
             sum => sum,
         }
+    }
+}
+
+impl std::ops::Add<NotePitchInterval> for u8 {
+    type Output = Self;
+    fn add(self, other: NotePitchInterval) -> Self {
+        let pitch_interval_value: u8 = match other {
+            NotePitchInterval::MinorSecond => 1,
+            NotePitchInterval::MajorSecond => 2,
+            NotePitchInterval::MinorThird => 3,
+            NotePitchInterval::MajorThird => 4,
+            NotePitchInterval::PerfectFourth => 5,
+            NotePitchInterval::AugmentedFourth | NotePitchInterval::DiminishedFifth => 6,
+            NotePitchInterval::PerfectFifth => 7,
+            NotePitchInterval::MinorSixth => 8,
+            NotePitchInterval::MajorSixth => 9,
+            NotePitchInterval::MinorSeventh => 10,
+            NotePitchInterval::MajorSeventh => 11,
+        };
+        let sum = self + pitch_interval_value;
+        // we want only pitch values to be in the range of 0-11 inclusive
+        sum % 12
     }
 }
 
