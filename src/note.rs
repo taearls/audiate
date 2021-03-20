@@ -69,6 +69,7 @@ impl Note {
         })
     }
 
+    // need to know if interval is ascending or descending
     pub fn relative_by_interval(&self, interval: NotePitchInterval) -> Self {
         let pitch_value = self.pitch_value() + interval;
 
@@ -76,7 +77,20 @@ impl Note {
 
         // is it possible to use an iterator with an enum to my benefit here?
         let name = match pitch_value {
-            1 => String::from("A"),
+            1 => {
+                match self.pitch_variant() {
+                    // still need to handle G##, which comes from a leading tone to A#
+                    // Cbb
+                    NotePitchVariant::Flatdbl => {
+                        String::from("Bbb")
+                    },
+                    // G#
+                    NotePitchVariant::Sharp => {
+                        String::from("A")
+                    },
+                    _ => unreachable!(),
+                }
+            },
             3 => String::from("B"),
             4 => String::from("C"),
             6 => String::from("D"),
@@ -178,6 +192,7 @@ impl std::ops::Add<NotePitchVariant> for u8 {
 impl std::ops::Add<NotePitchInterval> for u8 {
     type Output = Self;
     fn add(self, other: NotePitchInterval) -> Self {
+        // TODO: handle descending intervals.
         let pitch_interval_value: u8 = match other {
             NotePitchInterval::MinorSecond => 1,
             NotePitchInterval::MajorSecond => 2,
