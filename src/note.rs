@@ -75,28 +75,80 @@ impl Note {
 
         // TODO: figure out how to use original note name to determine which note name to assign based on pitch_value
 
+        // can I use a hash map to my advantage here?
         // is it possible to use an iterator with an enum to my benefit here?
         let name = match pitch_value {
-            1 => {
-                match self.pitch_variant() {
+            1 => { // G## / A / Bbb
+                match self.name().to_lowercase().as_ref() {
                     // still need to handle G##, which comes from a leading tone to A#
                     // Cbb
-                    NotePitchVariant::Flatdbl => {
-                        String::from("Bbb")
+                    "a#" => {
+                        String::from("G##")
                     },
-                    // G#
-                    NotePitchVariant::Sharp => {
+                    "g#" => {
                         String::from("A")
+                    },
+                    "cbb" => {
+                        String::from("Bbb")
                     },
                     _ => unreachable!(),
                 }
             },
-            3 => String::from("B"),
-            4 => String::from("C"),
-            6 => String::from("D"),
-            8 => String::from("E"),
-            9 => String::from("F"),
-            11 => String::from("G"),
+            2 => { // A# / Bb / Cbb
+                match self.name().to_lowercase().as_ref() {
+                    "g#" => {
+                        String::from("A#")
+                    },
+                    "ab" => {
+                        String::from("Bb")
+                    },
+                    "dbb" => {
+                        String::from("Cbb")
+                    },
+                    _ => unreachable!(),
+                }
+            },
+            3 => { // A## / B / Cb
+                match self.name().to_lowercase().as_ref() {
+                    "c##" => {
+                        String::from("A##")
+                    },
+                    "g#" => {
+                        String::from("B")
+                    },
+                    "ab" => {
+                        String::from("Cb")
+                    },
+                    _ => unreachable!(),
+                }
+            },
+            4 => { // B# / C / Dbb
+                String::from("C")
+            },
+            5 => { // B## / C# / Db
+                String::from("C#")
+            },
+            6 => { // C## / D / Ebb
+                String::from("D")
+            },
+            7 => { // D# / Eb / Fbb
+                String::from("Eb")
+            },
+            8 => { // D## / E / Fb 
+                String::from("E")
+            },
+            9 => { // E# / F / Gbb
+                String::from("F")
+            },
+            10 => { // E## / F# / Gb
+                String::from("F#")
+            },
+            11 => { // F## / G / Abb
+                String::from("G")
+            },
+            12 => { // G# / Ab
+                String::from("Ab")
+            }
             _ => unreachable!(),
         };
 
@@ -119,8 +171,9 @@ impl Note {
     pub fn pitch_variant(&self) -> NotePitchVariant {
         self.pitch_variant
     }
-    fn is_note(note: &str) -> bool {
-        (1..=3).contains(&note.len()) && NOTE_REGEX.is_match(note)
+
+    fn is_note(note_name: &str) -> bool {
+        (1..=3).contains(&note_name.len()) && NOTE_REGEX.is_match(note_name)
     }
 
     fn calc_pitch_variant(note_name: &str) -> Option<NotePitchVariant> {
