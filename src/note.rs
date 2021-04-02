@@ -17,6 +17,13 @@ pub enum NotePitchVariant {
     Sharpdbl,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum NoteIntervalDirection {
+    Ascending,
+    Descending,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum NotePitchInterval {
     // PerfectUnison,
     MinorSecond,
@@ -55,6 +62,7 @@ lazy_static! {
 
 impl Note {
     pub fn new(note_name: &str) -> Option<Self> {
+        // TODO: refactor to return an Err variant of some kind.
         if !Note::is_note(note_name) {
             return None;
         }
@@ -70,87 +78,99 @@ impl Note {
     }
 
     // need to know if interval is ascending or descending
-    pub fn relative_by_interval(&self, interval: NotePitchInterval) -> Self {
+    pub fn relative_by_interval(
+        &self,
+        interval: NotePitchInterval,
+        direction: NoteIntervalDirection,
+    ) -> Self {
         let pitch_value = self.pitch_value() + interval;
 
         // TODO: figure out how to use original note name to determine which note name to assign based on pitch_value
 
         // can I use a hash map to my advantage here?
         // is it possible to use an iterator with an enum to my benefit here?
-        let name = match pitch_value {
-            1 => { // G## / A / Bbb
-                match self.name().to_lowercase().as_ref() {
-                    // still need to handle G##, which comes from a leading tone to A#
-                    // Cbb
-                    "a#" => {
-                        String::from("G##")
-                    },
-                    "g#" => {
-                        String::from("A")
-                    },
-                    "cbb" => {
-                        String::from("Bbb")
-                    },
-                    _ => unreachable!(),
-                }
-            },
-            2 => { // A# / Bb / Cbb
-                match self.name().to_lowercase().as_ref() {
-                    "g#" => {
-                        String::from("A#")
-                    },
-                    "ab" => {
-                        String::from("Bb")
-                    },
-                    "dbb" => {
-                        String::from("Cbb")
-                    },
-                    _ => unreachable!(),
-                }
-            },
-            3 => { // A## / B / Cb
-                match self.name().to_lowercase().as_ref() {
-                    "c##" => {
-                        String::from("A##")
-                    },
-                    "g#" => {
-                        String::from("B")
-                    },
-                    "ab" => {
-                        String::from("Cb")
-                    },
-                    _ => unreachable!(),
-                }
-            },
-            4 => { // B# / C / Dbb
-                String::from("C")
-            },
-            5 => { // B## / C# / Db
-                String::from("C#")
-            },
-            6 => { // C## / D / Ebb
-                String::from("D")
-            },
-            7 => { // D# / Eb / Fbb
-                String::from("Eb")
-            },
-            8 => { // D## / E / Fb 
-                String::from("E")
-            },
-            9 => { // E# / F / Gbb
-                String::from("F")
-            },
-            10 => { // E## / F# / Gb
-                String::from("F#")
-            },
-            11 => { // F## / G / Abb
-                String::from("G")
-            },
-            12 => { // G# / Ab
-                String::from("Ab")
+        let name: String = match direction {
+            NoteIntervalDirection::Ascending => {
+                self.note_name_by_interval_ascending(interval, direction)
             }
-            _ => unreachable!(),
+            NoteIntervalDirection::Descending => {
+                self.note_name_by_interval_descending(interval, direction)
+            }
         };
+        // let name = match pitch_value {
+        //     1 => { // G## / A / Bbb
+        //         match self.name().to_lowercase().as_ref() {
+        //             // still need to handle G##, which comes from a leading tone to A#
+        //             // Cbb
+        //             "a#" => {
+        //                 String::from("G##")
+        //             },
+        //             "g#" => {
+        //                 String::from("A")
+        //             },
+        //             "cbb" => {
+        //                 String::from("Bbb")
+        //             },
+        //             _ => unreachable!(),
+        //         }
+        //     },
+        //     2 => { // A# / Bb / Cbb
+        //         match self.name().to_lowercase().as_ref() {
+        //             "g#" => {
+        //                 String::from("A#")
+        //             },
+        //             "ab" => {
+        //                 String::from("Bb")
+        //             },
+        //             "dbb" => {
+        //                 String::from("Cbb")
+        //             },
+        //             _ => unreachable!(),
+        //         }
+        //     },
+        //     3 => { // A## / B / Cb
+        //         match self.name().to_lowercase().as_ref() {
+        //             "c##" => {
+        //                 String::from("A##")
+        //             },
+        //             "g#" => {
+        //                 String::from("B")
+        //             },
+        //             "ab" => {
+        //                 String::from("Cb")
+        //             },
+        //             _ => unreachable!(),
+        //         }
+        //     },
+        //     4 => { // B# / C / Dbb
+        //         String::from("C")
+        //     },
+        //     5 => { // B## / C# / Db
+        //         String::from("C#")
+        //     },
+        //     6 => { // C## / D / Ebb
+        //         String::from("D")
+        //     },
+        //     7 => { // D# / Eb / Fbb
+        //         String::from("Eb")
+        //     },
+        //     8 => { // D## / E / Fb
+        //         String::from("E")
+        //     },
+        //     9 => { // E# / F / Gbb
+        //         String::from("F")
+        //     },
+        //     10 => { // E## / F# / Gb
+        //         String::from("F#")
+        //     },
+        //     11 => { // F## / G / Abb
+        //         String::from("G")
+        //     },
+        //     12 => { // G# / Ab
+        //         String::from("Ab")
+        //     }
+        //     _ => unreachable!(),
+        // };
 
         let pitch_variant = Note::calc_pitch_variant(&name).unwrap();
         Note {
@@ -217,6 +237,24 @@ impl Note {
         };
 
         Some(note_name_pitch_value + pitch_variant)
+    }
+
+    fn note_name_by_interval_ascending(
+        &self,
+        interval: NotePitchInterval,
+        direction: NoteIntervalDirection,
+    ) -> String {
+        let result = String::with_capacity(3);
+        result
+    }
+
+    fn note_name_by_interval_descending(
+        &self,
+        interval: NotePitchInterval,
+        direction: NoteIntervalDirection,
+    ) -> String {
+        let result = String::with_capacity(3);
+        result
     }
 }
 
