@@ -1,8 +1,6 @@
 use regex::Regex;
 use lazy_static::lazy_static;
 
-use std::collections::HashMap;
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct Note {
     name: String,
@@ -10,7 +8,7 @@ pub struct Note {
     pitch_variant: NotePitchVariant,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum NotePitchVariant {
     Flatdbl,
     Flat,
@@ -24,7 +22,6 @@ pub enum NoteIntervalDirection {
     Ascending,
     Descending,
 }
-
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum NotePitchInterval {
     // PerfectUnison,
@@ -145,8 +142,19 @@ lazy_static! {
 }
 
 impl Note {
-    // TODO: accept String and &str in this constructor fn
+    pub fn name(&self) -> &str {
+        &self.name
+    }
 
+    pub fn pitch_value(&self) -> u8 {
+        self.pitch_value
+    }
+
+    pub fn pitch_variant(&self) -> NotePitchVariant {
+        self.pitch_variant
+    }
+
+    // TODO: accept String and &str in this constructor fn
     // https://hermanradtke.com/2015/05/06/creating-a-rust-function-that-accepts-string-or-str.html
     pub fn new(note_name: &str) -> Option<Self> {
         // TODO: refactor to return an Err variant of some kind.
@@ -162,34 +170,6 @@ impl Note {
             pitch_value,
             pitch_variant,
         })
-    }
-
-    // need to know if interval is ascending or descending
-    pub fn relative_by_interval(
-        &self,
-        interval: NotePitchInterval,
-        direction: NoteIntervalDirection,
-    ) -> Self {
-        match direction {
-            NoteIntervalDirection::Ascending => {
-                self.note_by_interval_ascending(interval, direction)
-            }
-            NoteIntervalDirection::Descending => {
-                self.note_by_interval_descending(interval, direction)
-            }
-        }
-    }
-
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    pub fn pitch_value(&self) -> u8 {
-        self.pitch_value
-    }
-
-    pub fn pitch_variant(&self) -> NotePitchVariant {
-        self.pitch_variant
     }
 
     fn is_note(note_name: &str) -> bool {
@@ -238,6 +218,53 @@ impl Note {
 
         Some(note_name_pitch_value + pitch_variant)
     }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct NoteRelative<'a> {
+    base: &'a Note,
+    interval: NotePitchInterval,
+    direction: NoteIntervalDirection,
+}
+
+// this is an intermediate struct used when determining a target note based on an interval from a base note
+impl<'a> NoteRelative<'a> {
+
+    pub fn new(base: &'a Note, interval: NotePitchInterval, direction: NoteIntervalDirection) -> Self {
+        NoteRelative {
+            base,
+            interval,
+            direction,
+        }
+    }
+
+    // should this return a reference?
+    pub fn base(&self) -> &Note {
+        self.base
+    }
+
+    pub fn interval(&self) -> NotePitchInterval {
+        self.interval
+    }
+
+    pub fn pitch_variant(&self) -> NoteIntervalDirection {
+        self.direction
+    }
+
+    pub fn relative_by_interval(
+        &self,
+        interval: NotePitchInterval,
+        direction: NoteIntervalDirection,
+    ) -> Note {
+        match direction {
+            NoteIntervalDirection::Ascending => {
+                self.note_by_interval_ascending(interval, direction)
+            }
+            NoteIntervalDirection::Descending => {
+                self.note_by_interval_descending(interval, direction)
+            }
+        }
+    }
 
     fn note_by_interval_ascending(
         &self,
@@ -262,14 +289,12 @@ impl Note {
 
 impl From<&str> for Note {
     fn from(s: &str) -> Self {
-        // TODO: throw Error 
         Note::new(s).unwrap()
     }
 }
 
 impl From<String> for Note {
     fn from(s: String) -> Self {
-        // TODO: throw Error 
         Note::new(&s).unwrap()
     }
 }
