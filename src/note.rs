@@ -1,5 +1,5 @@
-use regex::Regex;
 use lazy_static::lazy_static;
+use regex::Regex;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Note {
@@ -15,6 +15,16 @@ pub enum NotePitchVariant {
     Natural,
     Sharp,
     Sharpdbl,
+}
+
+pub enum NotePitchName {
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -53,7 +63,7 @@ pub enum NotePitchInterval {
 // const ASCENDING_NOTE_MAP: HashMap<u8, String> = HashMap::new();
 // const PITCHES_ALL_KEYS: [HashMap<u8, NotePitchInterval>; 12] = [
 //     HashMap::new(
-        
+
 //     )
 // ]
 
@@ -155,29 +165,35 @@ impl Note {
     }
 
     // TODO: accept String and &str in this constructor fn
+    // TODO: add unit tests to accept &str and String
     // https://hermanradtke.com/2015/05/06/creating-a-rust-function-that-accepts-string-or-str.html
-    pub fn new(note_name: &str) -> Option<Self> {
+    pub fn with_name<T: std::fmt::Display>(note_name: T) -> Option<Self> {
         // TODO: refactor to return an Err variant of some kind.
-        if !Note::is_note(note_name) {
+        let note_name_str: String = note_name.to_string();
+        if !Note::is_note_name_valid(&note_name_str) {
             return None;
         }
 
-        let pitch_variant: NotePitchVariant = Note::calc_pitch_variant(note_name)?;
-        let pitch_value: u8 = Note::calc_pitch_value(note_name, pitch_variant)?;
+        let pitch_variant: NotePitchVariant = Note::calc_pitch_variant(&note_name_str)?;
+        let pitch_value: u8 = Note::calc_pitch_value(&note_name_str, pitch_variant)?;
 
         Some(Note {
-            name: note_name.to_uppercase(),
+            name: note_name_str.to_uppercase(),
             pitch_value,
             pitch_variant,
         })
     }
 
-    fn is_note(note_name: &str) -> bool {
+    pub fn with_pitch(value: u8, variant: NotePitchVariant) -> Option<Self> {
+        None
+    }
+
+    fn is_note_name_valid(note_name: &str) -> bool {
         (1..=3).contains(&note_name.len()) && NOTE_REGEX.is_match(note_name)
     }
 
     fn calc_pitch_variant(note_name: &str) -> Option<NotePitchVariant> {
-        if !Note::is_note(note_name) {
+        if !Note::is_note_name_valid(note_name) {
             return None;
         }
 
@@ -196,7 +212,7 @@ impl Note {
     }
 
     fn calc_pitch_value(note_name: &str, pitch_variant: NotePitchVariant) -> Option<u8> {
-        if !Note::is_note(note_name) {
+        if !Note::is_note_name_valid(note_name) {
             return None;
         }
 
@@ -229,8 +245,11 @@ struct NoteRelative<'a> {
 
 // this is an intermediate struct used when determining a target note based on an interval from a base note
 impl<'a> NoteRelative<'a> {
-
-    pub fn new(base: &'a Note, interval: NotePitchInterval, direction: NoteIntervalDirection) -> Self {
+    pub fn new(
+        base: &'a Note,
+        interval: NotePitchInterval,
+        direction: NoteIntervalDirection,
+    ) -> Self {
         NoteRelative {
             base,
             interval,
@@ -288,14 +307,14 @@ impl<'a> NoteRelative<'a> {
 }
 
 impl From<&str> for Note {
-    fn from(s: &str) -> Self {
-        Note::new(s).unwrap()
+    fn from(name: &str) -> Self {
+        Note::with_name(name).unwrap()
     }
 }
 
 impl From<String> for Note {
-    fn from(s: String) -> Self {
-        Note::new(&s).unwrap()
+    fn from(name: String) -> Self {
+        Note::with_name(&name).unwrap()
     }
 }
 
@@ -373,55 +392,55 @@ mod test_helper_fns {
 }
 
 #[cfg(test)]
-mod is_note_test {
+mod is_note_name_valid_test {
     use super::*;
 
     #[test]
-    fn is_note_false_when_invalid_string_passed() {
+    fn is_note_name_valid_false_when_invalid_string_passed() {
         // TODO: create helper_fn to reuse an invalid note name str
-        let note = Note::is_note("");
+        let note = Note::is_note_name_valid("");
         assert!(!note, " is not a note");
-        let note = Note::is_note("Ac");
+        let note = Note::is_note_name_valid("Ac");
         assert!(!note, "Ac is not a note");
-        let note = Note::is_note("H");
+        let note = Note::is_note_name_valid("H");
         assert!(!note, "H is not a note");
-        let note = Note::is_note("Ab#");
+        let note = Note::is_note_name_valid("Ab#");
         assert!(!note, "Ab# is not a note");
-        let note = Note::is_note("Abbb");
+        let note = Note::is_note_name_valid("Abbb");
         assert!(!note, "Abbb is not a note");
     }
     #[test]
     fn is_note_true_when_valid_string_passed_with_natural_variant() {
         for str in test_helper_fns::natural_note_name_str().split(' ') {
-            let note = Note::is_note(str);
+            let note = Note::is_note_name_valid(str);
             assert!(note, "{} is a note", str);
         }
     }
     #[test]
     fn is_note_true_when_valid_string_passed_with_flat_variant() {
         for str in test_helper_fns::flat_note_name_str().split(' ') {
-            let note = Note::is_note(str);
+            let note = Note::is_note_name_valid(str);
             assert!(note, "{} is a note", str);
         }
     }
     #[test]
     fn is_note_true_when_valid_string_passed_with_flatdbl_variant() {
         for str in test_helper_fns::flatdbl_note_name_str().split(' ') {
-            let note = Note::is_note(str);
+            let note = Note::is_note_name_valid(str);
             assert!(note, "{} is a note", str);
         }
     }
     #[test]
     fn is_note_true_when_valid_string_passed_with_sharp_variant() {
         for str in test_helper_fns::sharp_note_name_str().split(' ') {
-            let note = Note::is_note(str);
+            let note = Note::is_note_name_valid(str);
             assert!(note, "{} is a note", str);
         }
     }
     #[test]
     fn is_note_true_when_valid_string_passed_with_sharpdbl_variant() {
         for str in test_helper_fns::sharpdbl_note_name_str().split(' ') {
-            let note = Note::is_note(str);
+            let note = Note::is_note_name_valid(str);
             assert!(note, "{} is a note", str);
         }
     }
