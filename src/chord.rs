@@ -41,6 +41,6 @@ impl Chord {
         self.quality
     }
     pub fn root(&self) -> &str {
-        &self.root.name()
+        self.root.name()
     }
 }

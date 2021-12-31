@@ -1,5 +1,6 @@
 use lazy_static::lazy_static;
 use regex::Regex;
+use std::fmt::{Display, Formatter, Result};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Note {
@@ -17,14 +18,27 @@ pub enum NotePitchVariant {
     Sharpdbl,
 }
 
+impl Display for NotePitchVariant {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        let name: &str = match self {
+            NotePitchVariant::Flatdbl => "double flat",
+            NotePitchVariant::Flat => "flat",
+            NotePitchVariant::Natural => "natural",
+            NotePitchVariant::Sharp => "sharp",
+            NotePitchVariant::Sharpdbl => "double sharp",
+        };
+        write!(f, "{}", name)
+    }
+}
+
 pub enum NotePitchName {
-    A,
-    B,
-    C,
-    D,
-    E,
-    F,
-    G,
+    A(Note),
+    B(Note),
+    C(Note),
+    D(Note),
+    E(Note),
+    F(Note),
+    G(Note),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -60,87 +74,25 @@ pub enum NotePitchInterval {
     // MajorThirteenth,
 }
 
-// const ASCENDING_NOTE_MAP: HashMap<u8, String> = HashMap::new();
-// const PITCHES_ALL_KEYS: [HashMap<u8, NotePitchInterval>; 12] = [
-//     HashMap::new(
-
-//     )
-// ]
-
-// // let name = match pitch_value {
-//     1 => { // G## / A / Bbb
-//         match self.name().to_lowercase().as_ref() {
-//             // still need to handle G##, which comes from a leading tone to A#
-//             // Cbb
-//             "a#" => {
-//                 String::from("G##")
-//             },
-//             "g#" => {
-//                 String::from("A")
-//             },
-//             "cbb" => {
-//                 String::from("Bbb")
-//             },
-//             _ => unreachable!(),
-//         }
-//     },
-//     2 => { // A# / Bb / Cbb
-//         match self.name().to_lowercase().as_ref() {
-//             "g#" => {
-//                 String::from("A#")
-//             },
-//             "ab" => {
-//                 String::from("Bb")
-//             },
-//             "dbb" => {
-//                 String::from("Cbb")
-//             },
-//             _ => unreachable!(),
-//         }
-//     },
-//     3 => { // A## / B / Cb
-//         match self.name().to_lowercase().as_ref() {
-//             "c##" => {
-//                 String::from("A##")
-//             },
-//             "g#" => {
-//                 String::from("B")
-//             },
-//             "ab" => {
-//                 String::from("Cb")
-//             },
-//             _ => unreachable!(),
-//         }
-//     },
-//     4 => { // B# / C / Dbb
-//         String::from("C")
-//     },
-//     5 => { // B## / C# / Db
-//         String::from("C#")
-//     },
-//     6 => { // C## / D / Ebb
-//         String::from("D")
-//     },
-//     7 => { // D# / Eb / Fbb
-//         String::from("Eb")
-//     },
-//     8 => { // D## / E / Fb
-//         String::from("E")
-//     },
-//     9 => { // E# / F / Gbb
-//         String::from("F")
-//     },
-//     10 => { // E## / F# / Gb
-//         String::from("F#")
-//     },
-//     11 => { // F## / G / Abb
-//         String::from("G")
-//     },
-//     12 => { // G# / Ab
-//         String::from("Ab")
-//     }
-//     _ => unreachable!(),
-// };
+impl NotePitchInterval {
+    // returns the inverted pitch if you change between an ascending and descending interval
+    fn invert(&self) -> NotePitchInterval {
+        match self {
+            NotePitchInterval::MinorSecond => NotePitchInterval::MajorSeventh,
+            NotePitchInterval::MajorSecond => NotePitchInterval::MinorSeventh,
+            NotePitchInterval::MinorThird => NotePitchInterval::MajorSixth,
+            NotePitchInterval::MajorThird => NotePitchInterval::MinorSixth,
+            NotePitchInterval::PerfectFourth => NotePitchInterval::PerfectFifth,
+            NotePitchInterval::AugmentedFourth => NotePitchInterval::AugmentedFourth,
+            NotePitchInterval::DiminishedFifth => NotePitchInterval::DiminishedFifth,
+            NotePitchInterval::PerfectFifth => NotePitchInterval::PerfectFourth,
+            NotePitchInterval::MinorSixth => NotePitchInterval::MajorThird,
+            NotePitchInterval::MajorSixth => NotePitchInterval::MinorThird,
+            NotePitchInterval::MinorSeventh => NotePitchInterval::MajorSecond,
+            NotePitchInterval::MajorSeventh => NotePitchInterval::MinorSecond,
+        }
+    }
+}
 
 // global static regex to parse a note from a string slice that's only compiled once
 lazy_static! {
@@ -167,7 +119,7 @@ impl Note {
     // TODO: accept String and &str in this constructor fn
     // TODO: add unit tests to accept &str and String
     // https://hermanradtke.com/2015/05/06/creating-a-rust-function-that-accepts-string-or-str.html
-    pub fn with_name<T: std::fmt::Display>(note_name: T) -> Option<Self> {
+    pub fn with_name<T: Display>(note_name: T) -> Option<Self> {
         // TODO: refactor to return an Err variant of some kind.
         let note_name_str: String = note_name.to_string();
         if !Note::is_note_name_valid(&note_name_str) {
@@ -185,7 +137,11 @@ impl Note {
     }
 
     pub fn with_pitch(value: u8, variant: NotePitchVariant) -> Option<Self> {
-        None
+        unimplemented!(
+            "Create a new Note from the pitch value {} and its variant {}",
+            value,
+            variant
+        );
     }
 
     fn is_note_name_valid(note_name: &str) -> bool {
@@ -233,76 +189,6 @@ impl Note {
         };
 
         Some(note_name_pitch_value + pitch_variant)
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-struct NoteRelative<'a> {
-    base: &'a Note,
-    interval: NotePitchInterval,
-    direction: NoteIntervalDirection,
-}
-
-// this is an intermediate struct used when determining a target note based on an interval from a base note
-impl<'a> NoteRelative<'a> {
-    pub fn new(
-        base: &'a Note,
-        interval: NotePitchInterval,
-        direction: NoteIntervalDirection,
-    ) -> Self {
-        NoteRelative {
-            base,
-            interval,
-            direction,
-        }
-    }
-
-    // should this return a reference?
-    pub fn base(&self) -> &Note {
-        self.base
-    }
-
-    pub fn interval(&self) -> NotePitchInterval {
-        self.interval
-    }
-
-    pub fn pitch_variant(&self) -> NoteIntervalDirection {
-        self.direction
-    }
-
-    pub fn relative_by_interval(
-        &self,
-        interval: NotePitchInterval,
-        direction: NoteIntervalDirection,
-    ) -> Note {
-        match direction {
-            NoteIntervalDirection::Ascending => {
-                self.note_by_interval_ascending(interval, direction)
-            }
-            NoteIntervalDirection::Descending => {
-                self.note_by_interval_descending(interval, direction)
-            }
-        }
-    }
-
-    fn note_by_interval_ascending(
-        &self,
-        interval: NotePitchInterval,
-        direction: NoteIntervalDirection,
-    ) -> Note {
-        let result = String::with_capacity(3);
-        Note::from("A")
-    }
-
-    fn note_by_interval_descending(
-        &self,
-        interval: NotePitchInterval,
-        direction: NoteIntervalDirection,
-    ) -> Note {
-        let result = String::with_capacity(3);
-        // TODO : get pitch u8
-        // TODO : match note against descending hash map
-        Note::from("A")
     }
 }
 
