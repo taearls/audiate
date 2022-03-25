@@ -2,7 +2,7 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
-use std::fmt::{Display, Formatter, Result};
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Note {
@@ -21,7 +21,7 @@ pub enum NotePitchVariant {
 }
 
 impl Display for NotePitchVariant {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         let name: &str = match self {
             NotePitchVariant::Flatdbl => "double flat",
             NotePitchVariant::Flat => "flat",
@@ -191,9 +191,7 @@ impl Note {
 
     fn by_interval(&self, interval: NotePitchInterval) -> Option<Note> {
         let note_name = calc_name_by_interval(&self.name, interval);
-        if note_name.is_none() {
-            return None;
-        }
+        note_name.as_ref()?;
         Some(Note {
             name: note_name.unwrap(),
             pitch_value: calc_pitch_value_from_interval(self.pitch_value, interval),
@@ -274,15 +272,24 @@ fn calc_pitch_variant(note_name: &str) -> Option<NotePitchVariant> {
     }
 }
 
-impl From<&str> for Note {
-    fn from(name: &str) -> Self {
-        Note::with_name(name).unwrap()
+impl TryFrom<&str> for Note {
+    type Error = &'static str;
+
+    fn try_from(name: &str) -> Result<Self, Self::Error> {
+        match Note::with_name(&name) {
+            Some(note) => Ok(note),
+            None => Err("{name} is not a valid note name"),
+        }
     }
 }
+impl TryFrom<String> for Note {
+    type Error = &'static str;
 
-impl From<String> for Note {
-    fn from(name: String) -> Self {
-        Note::with_name(&name).unwrap()
+    fn try_from(name: String) -> Result<Self, Self::Error> {
+        match Note::with_name(&name) {
+            Some(note) => Ok(note),
+            None => Err("{name} is not a valid note name"),
+        }
     }
 }
 
@@ -623,9 +630,9 @@ mod by_interval_test {
 
     #[test]
     fn by_interval_returns_major_third() {
-        let note = Note::from("C");
+        let note = Note::try_from("C").unwrap();
         let actual = note.by_interval(NotePitchInterval::MajorThird).unwrap();
-        let expected = Note::from("E");
+        let expected = Note::try_from("E").unwrap();
         assert_eq!(actual, expected);
     }
 }
