@@ -272,6 +272,7 @@ fn calc_pitch_variant(note_name: &str) -> Option<NotePitchVariant> {
     }
 }
 
+// cannot make this TryFrom impl generic https://github.com/rust-lang/rust/issues/50133
 impl TryFrom<&str> for Note {
     type Error = &'static str;
 
