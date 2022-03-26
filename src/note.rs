@@ -223,45 +223,20 @@ fn calc_pitch_variant_by_name_and_pitch_value(
     name: NotePitchName,
     pitch_value: u8,
 ) -> Option<NotePitchVariant> {
+    use NotePitchVariant::*;
     let note_name_pitch_value: u8 = *NOTE_NAME_TO_PITCH.get(&name).unwrap();
-
-    let pitch_value_difference: i8 = std::cmp::min(
-        (note_name_pitch_value + 12) as i8 - (pitch_value + 12) as i8,
-        (pitch_value + 12) as i8 - (note_name_pitch_value + 12) as i8,
-    );
-
-    // if note_name_pitch_value
-
-    // match std::cmp::max(note_name_pitch_value, pitch_value) {
-    //     x if x == note_name_pitch_value => {
-    //         match pitch_value_difference {
-    //             -2 => Some(NotePitchVariant::Flatdbl),
-    //             -1 => Some(NotePitchVariant::Flat),
-    //             0 => Some(NotePitchVariant::Natural),
-    //             1 => Some(NotePitchVariant::Sharp),
-    //             2 => Some(NotePitchVariant::Sharpdbl),
-    //             _ => None,
-    //         }
-    //     },
-    //     _ => {
-    //         match pitch_value_difference {
-    //             2 => Some(NotePitchVariant::Flatdbl),
-    //             1 => Some(NotePitchVariant::Flat),
-    //             0 => Some(NotePitchVariant::Natural),
-    //             -1 => Some(NotePitchVariant::Sharp),
-    //             -2 => Some(NotePitchVariant::Sharpdbl),
-    //             _ => None,
-    //         }
-    //     }
-    // }
-
-    match pitch_value_difference {
-        -2 => Some(NotePitchVariant::Flatdbl),
-        -1 => Some(NotePitchVariant::Flat),
-        0 => Some(NotePitchVariant::Natural),
-        1 => Some(NotePitchVariant::Sharp),
-        2 => Some(NotePitchVariant::Sharpdbl),
-        _ => None,
+    if note_name_pitch_value + Flatdbl == pitch_value {
+        Some(Flatdbl)
+    } else if note_name_pitch_value + Flat == pitch_value {
+        Some(Flat)
+    } else if note_name_pitch_value + Natural == pitch_value {
+        Some(Natural)
+    } else if note_name_pitch_value + Sharp == pitch_value {
+        Some(Sharp)
+    } else if note_name_pitch_value + Sharpdbl == pitch_value {
+        Some(Sharpdbl)
+    } else {
+        None
     }
 }
 
@@ -666,11 +641,11 @@ mod by_interval_test {
 
     #[test]
     fn by_interval_returns_major_third_natural_root() {
-        // test_case("A", MajorThird, "C#");
-        // test_case("B", MajorThird, "D#");
+        test_case("A", MajorThird, "C#");
+        test_case("B", MajorThird, "D#");
         test_case("C", MajorThird, "E");
-        // test_case("D", MajorThird, "F#");
-        // test_case("E", MajorThird, "G#");
+        test_case("D", MajorThird, "F#");
+        test_case("E", MajorThird, "G#");
         test_case("F", MajorThird, "A");
         test_case("G", MajorThird, "B");
     }
@@ -680,10 +655,10 @@ mod by_interval_test {
     fn by_interval_returns_minor_third_natural_root() {
         test_case("A", MinorThird, "C");
         test_case("B", MinorThird, "D");
-        // test_case("C", MinorThird, "Eb");
+        test_case("C", MinorThird, "Eb");
         test_case("D", MinorThird, "F");
         test_case("E", MinorThird, "G");
-        // test_case("F", MinorThird, "Ab");
-        // test_case("G", MinorThird, "Bb");
+        test_case("F", MinorThird, "Ab");
+        test_case("G", MinorThird, "Bb");
     }
 }
