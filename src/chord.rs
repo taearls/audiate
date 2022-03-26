@@ -40,7 +40,8 @@ impl Chord {
     pub fn quality(&self) -> ChordQuality {
         self.quality
     }
-    pub fn root(&self) -> &str {
-        self.root.name()
+    pub fn root(&self) -> String {
+        let name = self.root.name();
+        format!("{}", name)
     }
 }

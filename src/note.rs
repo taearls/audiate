@@ -6,8 +6,8 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Note {
-    name: String,
-    pitch_value: u8,
+    name: NotePitchName,
+    pitch_value: u8, // TODO: investigate if I can type this as a const generic range between 0 - 11.
     pitch_variant: NotePitchVariant,
 }
 
@@ -23,24 +23,40 @@ pub enum NotePitchVariant {
 impl Display for NotePitchVariant {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         let name: &str = match self {
-            NotePitchVariant::Flatdbl => "double flat",
-            NotePitchVariant::Flat => "flat",
-            NotePitchVariant::Natural => "natural",
-            NotePitchVariant::Sharp => "sharp",
-            NotePitchVariant::Sharpdbl => "double sharp",
+            NotePitchVariant::Flatdbl => "bb",
+            NotePitchVariant::Flat => "b",
+            NotePitchVariant::Natural => "",
+            NotePitchVariant::Sharp => "#",
+            NotePitchVariant::Sharpdbl => "##",
         };
-        write!(f, "{}", name)
+        write!(f, "{name}")
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum NotePitchName {
-    A(Note),
-    B(Note),
-    C(Note),
-    D(Note),
-    E(Note),
-    F(Note),
-    G(Note),
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+}
+
+impl Display for NotePitchName {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        let name: char = match self {
+            NotePitchName::A => 'A',
+            NotePitchName::B => 'B',
+            NotePitchName::C => 'C',
+            NotePitchName::D => 'D',
+            NotePitchName::E => 'E',
+            NotePitchName::F => 'F',
+            NotePitchName::G => 'G',
+        };
+        write!(f, "{name}")
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -107,26 +123,26 @@ lazy_static! {
 }
 
 lazy_static! {
-    static ref NOTE_NAME_TO_PITCH: HashMap<String, u8> = HashMap::from([
-        (String::from("A"), 1),
-        (String::from("B"), 3),
-        (String::from("C"), 4),
-        (String::from("D"), 6),
-        (String::from("E"), 8),
-        (String::from("F"), 9),
-        (String::from("G"), 11),
+    static ref NOTE_NAME_TO_PITCH: HashMap<NotePitchName, u8> = HashMap::from([
+        (NotePitchName::A, 1),
+        (NotePitchName::B, 3),
+        (NotePitchName::C, 4),
+        (NotePitchName::D, 6),
+        (NotePitchName::E, 8),
+        (NotePitchName::F, 9),
+        (NotePitchName::G, 11),
     ]);
 }
 
 lazy_static! {
-    static ref PITCH_TO_NOTE_NAME: HashMap<u8, String> = HashMap::from([
-        (1, String::from("A")),
-        (3, String::from("B")),
-        (4, String::from("C")),
-        (6, String::from("D")),
-        (8, String::from("E")),
-        (9, String::from("F")),
-        (11, String::from("G")),
+    static ref PITCH_TO_NOTE_NAME: HashMap<u8, NotePitchName> = HashMap::from([
+        (1, NotePitchName::A),
+        (3, NotePitchName::B),
+        (4, NotePitchName::C),
+        (6, NotePitchName::D),
+        (8, NotePitchName::E),
+        (9, NotePitchName::F),
+        (11, NotePitchName::G),
     ]);
 }
 
@@ -149,8 +165,8 @@ lazy_static! {
 }
 
 impl Note {
-    pub fn name(&self) -> &str {
-        &self.name
+    pub fn name(&self) -> NotePitchName {
+        self.name
     }
 
     pub fn pitch_value(&self) -> u8 {
@@ -161,26 +177,6 @@ impl Note {
         self.pitch_variant
     }
 
-    // TODO: accept String and &str in this constructor fn
-    // TODO: add unit tests to accept &str and String
-    // https://hermanradtke.com/2015/05/06/creating-a-rust-function-that-accepts-string-or-str.html
-    pub fn with_name<T: Display>(note_name: T) -> Option<Self> {
-        // TODO: refactor to return an Err variant of some kind.
-        let note_name_str: String = note_name.to_string().to_uppercase();
-        if !Note::is_note_name_valid(&note_name_str) {
-            return None;
-        }
-
-        let pitch_variant: NotePitchVariant = calc_pitch_variant(&note_name_str)?;
-        let pitch_value: u8 = calc_pitch_value(&note_name_str, pitch_variant)?;
-
-        Some(Note {
-            name: note_name_str,
-            pitch_value,
-            pitch_variant,
-        })
-    }
-
     pub fn with_pitch(value: u8, variant: NotePitchVariant) -> Option<Self> {
         unimplemented!("Create a new Note from the pitch value {value} and its variant {variant}");
     }
@@ -189,59 +185,113 @@ impl Note {
         (1..=3).contains(&note_name.len()) && NOTE_REGEX.is_match(note_name)
     }
 
+    // TODO: find way to remove Option, or perhaps provide a separate fn that doesn't return an Option
     fn by_interval(&self, interval: NotePitchInterval) -> Option<Note> {
-        let note_name = calc_name_by_interval(&self.name, interval);
-        note_name.as_ref()?;
+        let name = calc_name_by_interval(self.name, interval);
+        let pitch_value = calc_pitch_value_from_interval(self.pitch_value, interval);
+
         Some(Note {
-            name: note_name.unwrap(),
-            pitch_value: calc_pitch_value_from_interval(self.pitch_value, interval),
-            pitch_variant: self.pitch_variant,
+            name,
+            pitch_value,
+            pitch_variant: calc_pitch_variant_by_name_and_pitch_value(name, pitch_value)?,
         })
     }
 }
 
-fn calc_name_by_interval(note_name: &str, pitch_interval: NotePitchInterval) -> Option<String> {
-    let note_name = note_name.to_uppercase();
-    if !Note::is_note_name_valid(&note_name) {
-        return None;
+impl Display for Note {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        let note_name = self.name;
+        let pitch_variant = self.pitch_variant;
+        write!(f, "{note_name}{pitch_variant}")
     }
-    let names: [char; 7] = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-    // let mut result = String::new();
-    // if let Some(interval_value) = NOTE_INTERVAL_TO_PITCH_VALUE.get(&pitch_interval) {
-    let original_idx = names
-        .iter()
-        .position(|&name| name.to_string() == note_name)
-        .unwrap();
-    let interval_index: usize = match pitch_interval {
-        NotePitchInterval::PerfectUnison => 0,
-        NotePitchInterval::MinorSecond | NotePitchInterval::MajorSecond => 1,
-        NotePitchInterval::MinorThird | NotePitchInterval::MajorThird => 2,
-        NotePitchInterval::PerfectFourth | NotePitchInterval::AugmentedFourth => 3,
-        NotePitchInterval::DiminishedFifth | NotePitchInterval::PerfectFifth => 4,
-        NotePitchInterval::MinorSixth | NotePitchInterval::MajorSixth => 5,
-        NotePitchInterval::MinorSeventh | NotePitchInterval::MajorSeventh => 6,
-    };
-    let new_index = (original_idx + interval_index) % names.len();
-    let result = String::from(names[new_index]);
-    // }
-
-    Some(result)
 }
 
-fn calc_pitch_value(note_name: &str, pitch_variant: NotePitchVariant) -> Option<u8> {
-    if !Note::is_note_name_valid(note_name) {
-        return None;
+fn calc_note_name(note_name: &str) -> Option<NotePitchName> {
+    match note_name.to_uppercase().chars().next() {
+        Some('A') => Some(NotePitchName::A),
+        Some('B') => Some(NotePitchName::B),
+        Some('C') => Some(NotePitchName::C),
+        Some('D') => Some(NotePitchName::D),
+        Some('E') => Some(NotePitchName::E),
+        Some('F') => Some(NotePitchName::F),
+        Some('G') => Some(NotePitchName::G),
+        _ => None,
     }
+}
 
-    let note_name = NOTE_REGEX
-        .captures(note_name)
-        .and_then(|cap| cap.name("note_name").map(|note_name| note_name.as_str()));
-    let note_name = match note_name {
-        Some(note_name) => note_name,
-        None => return None,
+fn calc_pitch_variant_by_name_and_pitch_value(
+    name: NotePitchName,
+    pitch_value: u8,
+) -> Option<NotePitchVariant> {
+    let note_name_pitch_value: u8 = *NOTE_NAME_TO_PITCH.get(&name).unwrap();
+
+    let pitch_value_difference: i8 = std::cmp::min(
+        (note_name_pitch_value + 12) as i8 - (pitch_value + 12) as i8,
+        (pitch_value + 12) as i8 - (note_name_pitch_value + 12) as i8,
+    );
+
+    // if note_name_pitch_value
+
+    // match std::cmp::max(note_name_pitch_value, pitch_value) {
+    //     x if x == note_name_pitch_value => {
+    //         match pitch_value_difference {
+    //             -2 => Some(NotePitchVariant::Flatdbl),
+    //             -1 => Some(NotePitchVariant::Flat),
+    //             0 => Some(NotePitchVariant::Natural),
+    //             1 => Some(NotePitchVariant::Sharp),
+    //             2 => Some(NotePitchVariant::Sharpdbl),
+    //             _ => None,
+    //         }
+    //     },
+    //     _ => {
+    //         match pitch_value_difference {
+    //             2 => Some(NotePitchVariant::Flatdbl),
+    //             1 => Some(NotePitchVariant::Flat),
+    //             0 => Some(NotePitchVariant::Natural),
+    //             -1 => Some(NotePitchVariant::Sharp),
+    //             -2 => Some(NotePitchVariant::Sharpdbl),
+    //             _ => None,
+    //         }
+    //     }
+    // }
+
+    match pitch_value_difference {
+        -2 => Some(NotePitchVariant::Flatdbl),
+        -1 => Some(NotePitchVariant::Flat),
+        0 => Some(NotePitchVariant::Natural),
+        1 => Some(NotePitchVariant::Sharp),
+        2 => Some(NotePitchVariant::Sharpdbl),
+        _ => None,
+    }
+}
+
+fn calc_name_by_interval(
+    note_name: NotePitchName,
+    pitch_interval: NotePitchInterval,
+) -> NotePitchName {
+    use NotePitchInterval::*;
+    use NotePitchName::*;
+
+    let names: [NotePitchName; 7] = [A, B, C, D, E, F, G];
+    let original_idx = names
+        .iter()
+        .position(|&name: &NotePitchName| name == note_name)
+        .unwrap();
+    let interval_index: usize = match pitch_interval {
+        PerfectUnison => 0,
+        MinorSecond | MajorSecond => 1,
+        MinorThird | MajorThird => 2,
+        PerfectFourth | AugmentedFourth => 3,
+        DiminishedFifth | PerfectFifth => 4,
+        MinorSixth | MajorSixth => 5,
+        MinorSeventh | MajorSeventh => 6,
     };
+    let new_index = (original_idx + interval_index) % names.len();
+    names[new_index]
+}
 
-    let note_name_pitch_value = match NOTE_NAME_TO_PITCH.get(&note_name.to_uppercase()) {
+fn calc_pitch_value(note_name: NotePitchName, pitch_variant: NotePitchVariant) -> Option<u8> {
+    let note_name_pitch_value = match NOTE_NAME_TO_PITCH.get(&note_name) {
         Some(pitch_value) => *pitch_value,
         None => return None,
     };
@@ -277,9 +327,27 @@ impl TryFrom<&str> for Note {
     type Error = &'static str;
 
     fn try_from(name: &str) -> Result<Self, Self::Error> {
-        match Note::with_name(&name) {
-            Some(note) => Ok(note),
-            None => Err("{name} is not a valid note name"),
+        let note_name_str: String = name.to_string().to_uppercase();
+        if !Note::is_note_name_valid(&note_name_str) {
+            return Err("{name} is not a valid note name");
+        }
+        let note_name = calc_note_name(&note_name_str);
+        let pitch_variant = calc_pitch_variant(&note_name_str);
+        if note_name.is_none() || pitch_variant.is_none() {
+            return Err("{name} is not a valid note name");
+        }
+        let note_name = note_name.unwrap();
+        let pitch_variant = pitch_variant.unwrap();
+        let pitch_value = calc_pitch_value(note_name, pitch_variant);
+
+        if let Some(pitch_value) = pitch_value {
+            Ok(Note {
+                name: note_name,
+                pitch_value,
+                pitch_variant,
+            })
+        } else {
+            Err("{name} is not a valid note name")
         }
     }
 }
@@ -287,9 +355,27 @@ impl TryFrom<String> for Note {
     type Error = &'static str;
 
     fn try_from(name: String) -> Result<Self, Self::Error> {
-        match Note::with_name(&name) {
-            Some(note) => Ok(note),
-            None => Err("{name} is not a valid note name"),
+        let note_name_str: String = name.to_uppercase();
+        if !Note::is_note_name_valid(&note_name_str) {
+            return Err("{name} is not a valid note name");
+        }
+        let note_name = calc_note_name(&note_name_str);
+        let pitch_variant = calc_pitch_variant(&note_name_str);
+        if note_name.is_none() || pitch_variant.is_none() {
+            return Err("{name} is not a valid note name");
+        }
+        let note_name = note_name.unwrap();
+        let pitch_variant = pitch_variant.unwrap();
+        let pitch_value = calc_pitch_value(note_name, pitch_variant);
+
+        if let Some(pitch_value) = pitch_value {
+            Ok(Note {
+                name: note_name,
+                pitch_value,
+                pitch_variant,
+            })
+        } else {
+            Err("{name} is not a valid note name")
         }
     }
 }
@@ -316,7 +402,6 @@ impl std::ops::Add<NotePitchVariant> for u8 {
 impl std::ops::Add<NotePitchInterval> for u8 {
     type Output = Self;
     fn add(self, other: NotePitchInterval) -> Self {
-        // TODO: handle descending intervals.
         let pitch_interval_value: u8 = match other {
             NotePitchInterval::PerfectUnison => 0,
             NotePitchInterval::MinorSecond => 1,
@@ -503,137 +588,102 @@ mod calc_pitch_variant_test {
 #[cfg(test)]
 mod calc_pitch_value_test {
     use super::*;
+    use NotePitchName::*;
+    use NotePitchVariant::*;
+
+    fn test_case(note_name: NotePitchName, pitch_variant: NotePitchVariant, expected: u8) {
+        let actual = calc_pitch_value(note_name, pitch_variant);
+        assert_eq!(actual.unwrap(), expected);
+    }
 
     #[test]
     fn calc_pitch_value_returns_correct_natural_variant() {
-        let pitch_value = calc_pitch_value("a", NotePitchVariant::Natural);
-        assert_eq!(pitch_value, Some(1));
-
-        let pitch_value = calc_pitch_value("b", NotePitchVariant::Natural);
-        assert_eq!(pitch_value, Some(3));
-
-        let pitch_value = calc_pitch_value("c", NotePitchVariant::Natural);
-        assert_eq!(pitch_value, Some(4));
-
-        let pitch_value = calc_pitch_value("d", NotePitchVariant::Natural);
-        assert_eq!(pitch_value, Some(6));
-
-        let pitch_value = calc_pitch_value("e", NotePitchVariant::Natural);
-        assert_eq!(pitch_value, Some(8));
-
-        let pitch_value = calc_pitch_value("f", NotePitchVariant::Natural);
-        assert_eq!(pitch_value, Some(9));
-
-        let pitch_value = calc_pitch_value("g", NotePitchVariant::Natural);
-        assert_eq!(pitch_value, Some(11));
+        test_case(A, Natural, 1);
+        test_case(B, Natural, 3);
+        test_case(C, Natural, 4);
+        test_case(D, Natural, 6);
+        test_case(E, Natural, 8);
+        test_case(F, Natural, 9);
+        test_case(G, Natural, 11);
     }
 
     #[test]
     fn calc_pitch_value_returns_correct_flat_variant() {
-        let pitch_value = calc_pitch_value("a", NotePitchVariant::Flat);
-        assert_eq!(pitch_value, Some(0));
-
-        let pitch_value = calc_pitch_value("b", NotePitchVariant::Flat);
-        assert_eq!(pitch_value, Some(2));
-
-        let pitch_value = calc_pitch_value("c", NotePitchVariant::Flat);
-        assert_eq!(pitch_value, Some(3));
-
-        let pitch_value = calc_pitch_value("d", NotePitchVariant::Flat);
-        assert_eq!(pitch_value, Some(5));
-
-        let pitch_value = calc_pitch_value("e", NotePitchVariant::Flat);
-        assert_eq!(pitch_value, Some(7));
-
-        let pitch_value = calc_pitch_value("f", NotePitchVariant::Flat);
-        assert_eq!(pitch_value, Some(8));
-
-        let pitch_value = calc_pitch_value("g", NotePitchVariant::Flat);
-        assert_eq!(pitch_value, Some(10));
+        test_case(A, Flat, 0);
+        test_case(B, Flat, 2);
+        test_case(C, Flat, 3);
+        test_case(D, Flat, 5);
+        test_case(E, Flat, 7);
+        test_case(F, Flat, 8);
+        test_case(G, Flat, 10);
     }
 
     #[test]
     fn calc_pitch_value_returns_correct_flatdbl_variant() {
-        let pitch_value = calc_pitch_value("a", NotePitchVariant::Flatdbl);
-        assert_eq!(pitch_value, Some(11));
-
-        let pitch_value = calc_pitch_value("b", NotePitchVariant::Flatdbl);
-        assert_eq!(pitch_value, Some(1));
-
-        let pitch_value = calc_pitch_value("c", NotePitchVariant::Flatdbl);
-        assert_eq!(pitch_value, Some(2));
-
-        let pitch_value = calc_pitch_value("d", NotePitchVariant::Flatdbl);
-        assert_eq!(pitch_value, Some(4));
-
-        let pitch_value = calc_pitch_value("e", NotePitchVariant::Flatdbl);
-        assert_eq!(pitch_value, Some(6));
-
-        let pitch_value = calc_pitch_value("f", NotePitchVariant::Flatdbl);
-        assert_eq!(pitch_value, Some(7));
-
-        let pitch_value = calc_pitch_value("g", NotePitchVariant::Flatdbl);
-        assert_eq!(pitch_value, Some(9));
+        test_case(A, Flatdbl, 11);
+        test_case(B, Flatdbl, 1);
+        test_case(C, Flatdbl, 2);
+        test_case(D, Flatdbl, 4);
+        test_case(E, Flatdbl, 6);
+        test_case(F, Flatdbl, 7);
+        test_case(G, Flatdbl, 9);
     }
 
     #[test]
     fn calc_pitch_value_returns_correct_sharp_variant() {
-        let pitch_value = calc_pitch_value("a", NotePitchVariant::Sharp);
-        assert_eq!(pitch_value, Some(2));
-
-        let pitch_value = calc_pitch_value("b", NotePitchVariant::Sharp);
-        assert_eq!(pitch_value, Some(4));
-
-        let pitch_value = calc_pitch_value("c", NotePitchVariant::Sharp);
-        assert_eq!(pitch_value, Some(5));
-
-        let pitch_value = calc_pitch_value("d", NotePitchVariant::Sharp);
-        assert_eq!(pitch_value, Some(7));
-
-        let pitch_value = calc_pitch_value("e", NotePitchVariant::Sharp);
-        assert_eq!(pitch_value, Some(9));
-
-        let pitch_value = calc_pitch_value("f", NotePitchVariant::Sharp);
-        assert_eq!(pitch_value, Some(10));
-
-        let pitch_value = calc_pitch_value("g", NotePitchVariant::Sharp);
-        assert_eq!(pitch_value, Some(0));
+        test_case(A, Sharp, 2);
+        test_case(B, Sharp, 4);
+        test_case(C, Sharp, 5);
+        test_case(D, Sharp, 7);
+        test_case(E, Sharp, 9);
+        test_case(F, Sharp, 10);
+        test_case(G, Sharp, 0);
     }
 
     #[test]
     fn calc_pitch_value_returns_correct_sharpdbl_variant() {
-        let pitch_value = calc_pitch_value("a", NotePitchVariant::Sharpdbl);
-        assert_eq!(pitch_value, Some(3));
-
-        let pitch_value = calc_pitch_value("b", NotePitchVariant::Sharpdbl);
-        assert_eq!(pitch_value, Some(5));
-
-        let pitch_value = calc_pitch_value("c", NotePitchVariant::Sharpdbl);
-        assert_eq!(pitch_value, Some(6));
-
-        let pitch_value = calc_pitch_value("d", NotePitchVariant::Sharpdbl);
-        assert_eq!(pitch_value, Some(8));
-
-        let pitch_value = calc_pitch_value("e", NotePitchVariant::Sharpdbl);
-        assert_eq!(pitch_value, Some(10));
-
-        let pitch_value = calc_pitch_value("f", NotePitchVariant::Sharpdbl);
-        assert_eq!(pitch_value, Some(11));
-
-        let pitch_value = calc_pitch_value("g", NotePitchVariant::Sharpdbl);
-        assert_eq!(pitch_value, Some(1));
+        test_case(A, Sharpdbl, 3);
+        test_case(B, Sharpdbl, 5);
+        test_case(C, Sharpdbl, 6);
+        test_case(D, Sharpdbl, 8);
+        test_case(E, Sharpdbl, 10);
+        test_case(F, Sharpdbl, 11);
+        test_case(G, Sharpdbl, 1);
     }
 }
 
 #[cfg(test)]
 mod by_interval_test {
     use super::*;
+    use NotePitchInterval::*;
+
+    fn test_case(start_note_name: &str, interval: NotePitchInterval, end_note_name: &str) {
+        let note = Note::try_from(start_note_name).unwrap();
+        let actual = note.by_interval(interval).unwrap();
+        let expected = Note::try_from(end_note_name).unwrap();
+        assert_eq!(actual, expected);
+    }
 
     #[test]
-    fn by_interval_returns_major_third() {
-        let note = Note::try_from("C").unwrap();
-        let actual = note.by_interval(NotePitchInterval::MajorThird).unwrap();
-        let expected = Note::try_from("E").unwrap();
-        assert_eq!(actual, expected);
+    fn by_interval_returns_major_third_natural_root() {
+        // test_case("A", MajorThird, "C#");
+        // test_case("B", MajorThird, "D#");
+        test_case("C", MajorThird, "E");
+        // test_case("D", MajorThird, "F#");
+        // test_case("E", MajorThird, "G#");
+        test_case("F", MajorThird, "A");
+        test_case("G", MajorThird, "B");
+    }
+
+    #[test]
+    #[ignore]
+    fn by_interval_returns_minor_third_natural_root() {
+        test_case("A", MinorThird, "C");
+        test_case("B", MinorThird, "D");
+        // test_case("C", MinorThird, "Eb");
+        test_case("D", MinorThird, "F");
+        test_case("E", MinorThird, "G");
+        // test_case("F", MinorThird, "Ab");
+        // test_case("G", MinorThird, "Bb");
     }
 }
