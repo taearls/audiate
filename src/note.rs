@@ -1,13 +1,13 @@
 #![allow(dead_code)]
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Note {
     name: NotePitchName,
-    pitch_value: u8, // TODO: investigate if I can type this as a const generic range between 0 - 11.
+    // maybe I don't need the pitch_value field in this struct
+    pitch_value: u8, // TODO: investigate if I can type this as a const generic range between 0 - 11
     pitch_variant: NotePitchVariant,
 }
 
@@ -122,46 +122,33 @@ lazy_static! {
   ).unwrap();
 }
 
-lazy_static! {
-    static ref NOTE_NAME_TO_PITCH: HashMap<NotePitchName, u8> = HashMap::from([
-        (NotePitchName::A, 1),
-        (NotePitchName::B, 3),
-        (NotePitchName::C, 4),
-        (NotePitchName::D, 6),
-        (NotePitchName::E, 8),
-        (NotePitchName::F, 9),
-        (NotePitchName::G, 11),
-    ]);
+fn note_name_to_pitch(note_name: NotePitchName) -> u8 {
+    match note_name {
+        NotePitchName::A => 1,
+        NotePitchName::B => 3,
+        NotePitchName::C => 4,
+        NotePitchName::D => 6,
+        NotePitchName::E => 8,
+        NotePitchName::F => 9,
+        NotePitchName::G => 11,
+    }
 }
 
-lazy_static! {
-    static ref PITCH_TO_NOTE_NAME: HashMap<u8, NotePitchName> = HashMap::from([
-        (1, NotePitchName::A),
-        (3, NotePitchName::B),
-        (4, NotePitchName::C),
-        (6, NotePitchName::D),
-        (8, NotePitchName::E),
-        (9, NotePitchName::F),
-        (11, NotePitchName::G),
-    ]);
-}
-
-lazy_static! {
-    static ref NOTE_INTERVAL_TO_PITCH_VALUE: HashMap<NotePitchInterval, u8> = HashMap::from([
-        (NotePitchInterval::PerfectUnison, 0),
-        (NotePitchInterval::MinorSecond, 1),
-        (NotePitchInterval::MajorSecond, 2),
-        (NotePitchInterval::MinorThird, 3),
-        (NotePitchInterval::MajorThird, 4),
-        (NotePitchInterval::PerfectFourth, 5),
-        (NotePitchInterval::AugmentedFourth, 6),
-        (NotePitchInterval::DiminishedFifth, 6),
-        (NotePitchInterval::PerfectFifth, 7),
-        (NotePitchInterval::MinorSixth, 8),
-        (NotePitchInterval::MajorSixth, 9),
-        (NotePitchInterval::MinorSeventh, 10),
-        (NotePitchInterval::MajorSeventh, 11),
-    ]);
+fn interval_to_pitch_value(interval: NotePitchInterval) -> u8 {
+    match interval {
+        NotePitchInterval::PerfectUnison => 0,
+        NotePitchInterval::MinorSecond => 1,
+        NotePitchInterval::MajorSecond => 2,
+        NotePitchInterval::MinorThird => 3,
+        NotePitchInterval::MajorThird => 4,
+        NotePitchInterval::PerfectFourth => 5,
+        NotePitchInterval::AugmentedFourth | NotePitchInterval::DiminishedFifth => 6,
+        NotePitchInterval::PerfectFifth => 7,
+        NotePitchInterval::MinorSixth => 8,
+        NotePitchInterval::MajorSixth => 9,
+        NotePitchInterval::MinorSeventh => 10,
+        NotePitchInterval::MajorSeventh => 11,
+    }
 }
 
 impl Note {
@@ -181,7 +168,20 @@ impl Note {
         unimplemented!("Create a new Note from the pitch value {value} and its variant {variant}");
     }
 
+    pub fn by_interval_ascending(&self, interval: NotePitchInterval) -> Option<Note> {
+        self.by_interval(interval)
+    }
+
+    pub fn by_interval_descending(&self, interval: NotePitchInterval) -> Option<Note> {
+        self.by_interval(interval.invert())
+    }
+
     fn is_note_name_valid(note_name: &str) -> bool {
+        println!(
+            "length constraint: {}, regex match: {}",
+            (1..=3).contains(&note_name.len()),
+            NOTE_REGEX.is_match(note_name)
+        );
         (1..=3).contains(&note_name.len()) && NOTE_REGEX.is_match(note_name)
     }
 
@@ -224,7 +224,7 @@ fn calc_pitch_variant_by_name_and_pitch_value(
     pitch_value: u8,
 ) -> Option<NotePitchVariant> {
     use NotePitchVariant::*;
-    let note_name_pitch_value: u8 = *NOTE_NAME_TO_PITCH.get(&name).unwrap();
+    let note_name_pitch_value: u8 = note_name_to_pitch(name);
     if note_name_pitch_value + Flatdbl == pitch_value {
         Some(Flatdbl)
     } else if note_name_pitch_value + Flat == pitch_value {
@@ -266,10 +266,7 @@ fn calc_name_by_interval(
 }
 
 fn calc_pitch_value(note_name: NotePitchName, pitch_variant: NotePitchVariant) -> Option<u8> {
-    let note_name_pitch_value = match NOTE_NAME_TO_PITCH.get(&note_name) {
-        Some(pitch_value) => *pitch_value,
-        None => return None,
-    };
+    let note_name_pitch_value = note_name_to_pitch(note_name);
 
     Some(note_name_pitch_value + pitch_variant)
 }
@@ -297,19 +294,32 @@ fn calc_pitch_variant(note_name: &str) -> Option<NotePitchVariant> {
     }
 }
 
+fn uppercase_first_char(input: &str) -> String {
+    let mut c = input.chars();
+    match c.next() {
+        None => String::new(),
+        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+    }
+}
+
 // cannot make this TryFrom impl generic https://github.com/rust-lang/rust/issues/50133
 impl TryFrom<&str> for Note {
-    type Error = &'static str;
+    type Error = String;
 
     fn try_from(name: &str) -> Result<Self, Self::Error> {
-        let note_name_str: String = name.to_string().to_uppercase();
+        let note_name_str: String = uppercase_first_char(name);
         if !Note::is_note_name_valid(&note_name_str) {
-            return Err("{name} is not a valid note name");
+            return Err(format!(
+                "Note name &str provided failed validation. {name} is not a valid note name"
+            ));
         }
         let note_name = calc_note_name(&note_name_str);
         let pitch_variant = calc_pitch_variant(&note_name_str);
-        if note_name.is_none() || pitch_variant.is_none() {
-            return Err("{name} is not a valid note name");
+
+        if note_name.is_none() {
+            return Err(format!("Unable to construct NotePitchName with {name}"));
+        } else if pitch_variant.is_none() {
+            return Err(format!("Unable to construct NotePitchVariant with {name}"));
         }
         let note_name = note_name.unwrap();
         let pitch_variant = pitch_variant.unwrap();
@@ -322,7 +332,7 @@ impl TryFrom<&str> for Note {
                 pitch_variant,
             })
         } else {
-            Err("{name} is not a valid note name")
+            return Err(format!("{name} is not a valid note name"));
         }
     }
 }
@@ -628,37 +638,371 @@ mod calc_pitch_value_test {
 }
 
 #[cfg(test)]
-mod by_interval_test {
+mod by_interval_ascending_test {
     use super::*;
     use NotePitchInterval::*;
 
     fn test_case(start_note_name: &str, interval: NotePitchInterval, end_note_name: &str) {
         let note = Note::try_from(start_note_name).unwrap();
-        let actual = note.by_interval(interval).unwrap();
+        let actual = note.by_interval_ascending(interval).unwrap();
         let expected = Note::try_from(end_note_name).unwrap();
         assert_eq!(actual, expected);
     }
 
     #[test]
-    fn by_interval_returns_major_third_natural_root() {
+    fn by_interval_ascending_works_with_a_natural() {
+        test_case("A", PerfectUnison, "A");
+        test_case("A", MinorSecond, "Bb");
+        test_case("A", MajorSecond, "B");
+        test_case("A", MinorThird, "C");
         test_case("A", MajorThird, "C#");
-        test_case("B", MajorThird, "D#");
-        test_case("C", MajorThird, "E");
-        test_case("D", MajorThird, "F#");
-        test_case("E", MajorThird, "G#");
-        test_case("F", MajorThird, "A");
-        test_case("G", MajorThird, "B");
+        test_case("A", PerfectFourth, "D");
+        test_case("A", AugmentedFourth, "D#");
+        test_case("A", DiminishedFifth, "Eb");
+        test_case("A", PerfectFifth, "E");
+        test_case("A", MinorSixth, "F");
+        test_case("A", MajorSixth, "F#");
+        test_case("A", MinorSeventh, "G");
+        test_case("A", MajorSeventh, "G#");
     }
 
     #[test]
-    #[ignore]
-    fn by_interval_returns_minor_third_natural_root() {
-        test_case("A", MinorThird, "C");
+    fn by_interval_ascending_works_with_a_flat() {
+        test_case("Ab", PerfectUnison, "Ab");
+        test_case("Ab", MinorSecond, "Bbb");
+        test_case("Ab", MajorSecond, "Bb");
+        test_case("Ab", MinorThird, "Cb");
+        test_case("Ab", MajorThird, "C");
+        test_case("Ab", PerfectFourth, "Db");
+        test_case("Ab", AugmentedFourth, "D");
+        test_case("Ab", DiminishedFifth, "Ebb");
+        test_case("Ab", PerfectFifth, "Eb");
+        test_case("Ab", MinorSixth, "Fb");
+        test_case("Ab", MajorSixth, "F");
+        test_case("Ab", MinorSeventh, "Gb");
+        test_case("Ab", MajorSeventh, "G");
+    }
+
+    #[test]
+    fn by_interval_ascending_works_with_a_sharp() {
+        test_case("A#", PerfectUnison, "A#");
+        test_case("A#", MinorSecond, "B");
+        test_case("A#", MajorSecond, "B#");
+        test_case("A#", MinorThird, "C#");
+        test_case("A#", MajorThird, "C##");
+        test_case("A#", PerfectFourth, "D#");
+        test_case("A#", AugmentedFourth, "D##");
+        test_case("A#", DiminishedFifth, "E");
+        test_case("A#", PerfectFifth, "E#");
+        test_case("A#", MinorSixth, "F#");
+        test_case("A#", MajorSixth, "F##");
+        test_case("A#", MinorSeventh, "G#");
+        test_case("A#", MajorSeventh, "G##");
+    }
+
+    #[test]
+    fn by_interval_ascending_works_with_b_natural() {
+        test_case("B", PerfectUnison, "B");
+        test_case("B", MinorSecond, "C");
+        test_case("B", MajorSecond, "C#");
         test_case("B", MinorThird, "D");
+        test_case("B", MajorThird, "D#");
+        test_case("B", PerfectFourth, "E");
+        test_case("B", AugmentedFourth, "E#");
+        test_case("B", DiminishedFifth, "F");
+        test_case("B", PerfectFifth, "F#");
+        test_case("B", MinorSixth, "G");
+        test_case("B", MajorSixth, "G#");
+        test_case("B", MinorSeventh, "A");
+        test_case("B", MajorSeventh, "A#");
+    }
+
+    #[test]
+    fn by_interval_ascending_works_with_b_flat() {
+        test_case("Bb", PerfectUnison, "Bb");
+        test_case("Bb", MinorSecond, "Cb");
+        test_case("Bb", MajorSecond, "C");
+        test_case("Bb", MinorThird, "Db");
+        test_case("Bb", MajorThird, "D");
+        test_case("Bb", PerfectFourth, "Eb");
+        test_case("Bb", AugmentedFourth, "E");
+        test_case("Bb", DiminishedFifth, "Fb");
+        test_case("Bb", PerfectFifth, "F");
+        test_case("Bb", MinorSixth, "Gb");
+        test_case("Bb", MajorSixth, "G");
+        test_case("Bb", MinorSeventh, "Ab");
+        test_case("Bb", MajorSeventh, "A");
+    }
+
+    #[test]
+    fn by_interval_ascending_works_with_b_sharp() {
+        test_case("B#", PerfectUnison, "B#");
+        test_case("B#", MinorSecond, "C#");
+        test_case("B#", MajorSecond, "C##");
+        test_case("B#", MinorThird, "D#");
+        test_case("B#", MajorThird, "D##");
+        test_case("B#", PerfectFourth, "E#");
+        test_case("B#", AugmentedFourth, "E##");
+        test_case("B#", DiminishedFifth, "F#");
+        test_case("B#", PerfectFifth, "F##");
+        test_case("B#", MinorSixth, "G#");
+        test_case("B#", MajorSixth, "G##");
+        test_case("B#", MinorSeventh, "A#");
+        test_case("B#", MajorSeventh, "A##");
+    }
+
+    #[test]
+    fn by_interval_ascending_works_with_c_natural() {
+        test_case("C", PerfectUnison, "C");
+        test_case("C", MinorSecond, "Db");
+        test_case("C", MajorSecond, "D");
         test_case("C", MinorThird, "Eb");
+        test_case("C", MajorThird, "E");
+        test_case("C", PerfectFourth, "F");
+        test_case("C", AugmentedFourth, "F#");
+        test_case("C", DiminishedFifth, "Gb");
+        test_case("C", PerfectFifth, "G");
+        test_case("C", MinorSixth, "Ab");
+        test_case("C", MajorSixth, "A");
+        test_case("C", MinorSeventh, "Bb");
+        test_case("C", MajorSeventh, "B");
+    }
+
+    #[test]
+    fn by_interval_ascending_works_with_c_flat() {
+        test_case("Cb", PerfectUnison, "Cb");
+        test_case("Cb", MinorSecond, "Dbb");
+        test_case("Cb", MajorSecond, "Db");
+        test_case("Cb", MinorThird, "Ebb");
+        test_case("Cb", MajorThird, "Eb");
+        test_case("Cb", PerfectFourth, "Fb");
+        test_case("Cb", AugmentedFourth, "F");
+        test_case("Cb", DiminishedFifth, "Gbb");
+        test_case("Cb", PerfectFifth, "Gb");
+        test_case("Cb", MinorSixth, "Abb");
+        test_case("Cb", MajorSixth, "Ab");
+        test_case("Cb", MinorSeventh, "Bbb");
+        test_case("Cb", MajorSeventh, "Bb");
+    }
+
+    #[test]
+    fn by_interval_ascending_works_with_c_sharp() {
+        test_case("C#", PerfectUnison, "C#");
+        test_case("C#", MinorSecond, "D");
+        test_case("C#", MajorSecond, "D#");
+        test_case("C#", MinorThird, "E");
+        test_case("C#", MajorThird, "E#");
+        test_case("C#", PerfectFourth, "F#");
+        test_case("C#", AugmentedFourth, "F##");
+        test_case("C#", DiminishedFifth, "G");
+        test_case("C#", PerfectFifth, "G#");
+        test_case("C#", MinorSixth, "A");
+        test_case("C#", MajorSixth, "A#");
+        test_case("C#", MinorSeventh, "B");
+        test_case("C#", MajorSeventh, "B#");
+    }
+
+    #[test]
+    fn by_interval_ascending_works_with_d_natural() {
+        test_case("D", PerfectUnison, "D");
+        test_case("D", MinorSecond, "Eb");
+        test_case("D", MajorSecond, "E");
         test_case("D", MinorThird, "F");
+        test_case("D", MajorThird, "F#");
+        test_case("D", PerfectFourth, "G");
+        test_case("D", AugmentedFourth, "G#");
+        test_case("D", DiminishedFifth, "Ab");
+        test_case("D", PerfectFifth, "A");
+        test_case("D", MinorSixth, "Bb");
+        test_case("D", MajorSixth, "B");
+        test_case("D", MinorSeventh, "C");
+        test_case("D", MajorSeventh, "C#");
+    }
+
+    #[test]
+    fn by_interval_ascending_works_with_d_flat() {
+        test_case("Db", PerfectUnison, "Db");
+        test_case("Db", MinorSecond, "Ebb");
+        test_case("Db", MajorSecond, "Eb");
+        test_case("Db", MinorThird, "Fb");
+        test_case("Db", MajorThird, "F");
+        test_case("Db", PerfectFourth, "Gb");
+        test_case("Db", AugmentedFourth, "G");
+        test_case("Db", DiminishedFifth, "Abb");
+        test_case("Db", PerfectFifth, "Ab");
+        test_case("Db", MinorSixth, "Bbb");
+        test_case("Db", MajorSixth, "Bb");
+        test_case("Db", MinorSeventh, "Cb");
+        test_case("Db", MajorSeventh, "C");
+    }
+
+    #[test]
+    fn by_interval_ascending_works_with_d_sharp() {
+        test_case("D#", PerfectUnison, "D#");
+        test_case("D#", MinorSecond, "E");
+        test_case("D#", MajorSecond, "E#");
+        test_case("D#", MinorThird, "F#");
+        test_case("D#", MajorThird, "F##");
+        test_case("D#", PerfectFourth, "G#");
+        test_case("D#", AugmentedFourth, "G##");
+        test_case("D#", DiminishedFifth, "A");
+        test_case("D#", PerfectFifth, "A#");
+        test_case("D#", MinorSixth, "B");
+        test_case("D#", MajorSixth, "B#");
+        test_case("D#", MinorSeventh, "C#");
+        test_case("D#", MajorSeventh, "C##");
+    }
+
+    #[test]
+    fn by_interval_ascending_works_with_e_natural() {
+        test_case("E", PerfectUnison, "E");
+        test_case("E", MinorSecond, "F");
+        test_case("E", MajorSecond, "F#");
         test_case("E", MinorThird, "G");
+        test_case("E", MajorThird, "G#");
+        test_case("E", PerfectFourth, "A");
+        test_case("E", AugmentedFourth, "A#");
+        test_case("E", DiminishedFifth, "Bb");
+        test_case("E", PerfectFifth, "B");
+        test_case("E", MinorSixth, "C");
+        test_case("E", MajorSixth, "C#");
+        test_case("E", MinorSeventh, "D");
+        test_case("E", MajorSeventh, "D#");
+    }
+
+    #[test]
+    fn by_interval_ascending_works_with_e_flat() {
+        test_case("Eb", PerfectUnison, "Eb");
+        test_case("Eb", MinorSecond, "Fb");
+        test_case("Eb", MajorSecond, "F");
+        test_case("Eb", MinorThird, "Gb");
+        test_case("Eb", MajorThird, "G");
+        test_case("Eb", PerfectFourth, "Ab");
+        test_case("Eb", AugmentedFourth, "A");
+        test_case("Eb", DiminishedFifth, "Bbb");
+        test_case("Eb", PerfectFifth, "Bb");
+        test_case("Eb", MinorSixth, "Cb");
+        test_case("Eb", MajorSixth, "C");
+        test_case("Eb", MinorSeventh, "Db");
+        test_case("Eb", MajorSeventh, "D");
+    }
+
+    #[test]
+    fn by_interval_ascending_works_with_e_sharp() {
+        test_case("E#", PerfectUnison, "E#");
+        test_case("E#", MinorSecond, "F#");
+        test_case("E#", MajorSecond, "F##");
+        test_case("E#", MinorThird, "G#");
+        test_case("E#", MajorThird, "G##");
+        test_case("E#", PerfectFourth, "A#");
+        test_case("E#", AugmentedFourth, "A##");
+        test_case("E#", DiminishedFifth, "B");
+        test_case("E#", PerfectFifth, "B#");
+        test_case("E#", MinorSixth, "C#");
+        test_case("E#", MajorSixth, "C##");
+        test_case("E#", MinorSeventh, "D#");
+        test_case("E#", MajorSeventh, "D##");
+    }
+
+    #[test]
+    fn by_interval_ascending_works_with_f_natural() {
+        test_case("F", PerfectUnison, "F");
+        test_case("F", MinorSecond, "Gb");
+        test_case("F", MajorSecond, "G");
         test_case("F", MinorThird, "Ab");
+        test_case("F", MajorThird, "A");
+        test_case("F", PerfectFourth, "Bb");
+        test_case("F", AugmentedFourth, "B");
+        test_case("F", DiminishedFifth, "Cb");
+        test_case("F", PerfectFifth, "C");
+        test_case("F", MinorSixth, "Db");
+        test_case("F", MajorSixth, "D");
+        test_case("F", MinorSeventh, "Eb");
+        test_case("F", MajorSeventh, "E");
+    }
+
+    #[test]
+    fn by_interval_ascending_works_with_f_flat() {
+        test_case("Fb", PerfectUnison, "Fb");
+        test_case("Fb", MinorSecond, "Gbb");
+        test_case("Fb", MajorSecond, "Gb");
+        test_case("Fb", MinorThird, "Abb");
+        test_case("Fb", MajorThird, "Ab");
+        test_case("Fb", PerfectFourth, "Bbb");
+        test_case("Fb", AugmentedFourth, "Bb");
+        test_case("Fb", DiminishedFifth, "Cbb");
+        test_case("Fb", PerfectFifth, "Cb");
+        test_case("Fb", MinorSixth, "Dbb");
+        test_case("Fb", MajorSixth, "Db");
+        test_case("Fb", MinorSeventh, "Ebb");
+        test_case("Fb", MajorSeventh, "Eb");
+    }
+
+    #[test]
+    fn by_interval_ascending_works_with_f_sharp() {
+        test_case("F#", PerfectUnison, "F#");
+        test_case("F#", MinorSecond, "G");
+        test_case("F#", MajorSecond, "G#");
+        test_case("F#", MinorThird, "A");
+        test_case("F#", MajorThird, "A#");
+        test_case("F#", PerfectFourth, "B");
+        test_case("F#", AugmentedFourth, "B#");
+        test_case("F#", DiminishedFifth, "C");
+        test_case("F#", PerfectFifth, "C#");
+        test_case("F#", MinorSixth, "D");
+        test_case("F#", MajorSixth, "D#");
+        test_case("F#", MinorSeventh, "E");
+        test_case("F#", MajorSeventh, "E#");
+    }
+
+    #[test]
+    fn by_interval_ascending_works_with_g_natural() {
+        test_case("G", PerfectUnison, "G");
+        test_case("G", MinorSecond, "Ab");
+        test_case("G", MajorSecond, "A");
         test_case("G", MinorThird, "Bb");
+        test_case("G", MajorThird, "B");
+        test_case("G", PerfectFourth, "C");
+        test_case("G", AugmentedFourth, "C#");
+        test_case("G", DiminishedFifth, "Db");
+        test_case("G", PerfectFifth, "D");
+        test_case("G", MinorSixth, "Eb");
+        test_case("G", MajorSixth, "E");
+        test_case("G", MinorSeventh, "F");
+        test_case("G", MajorSeventh, "F#");
+    }
+
+    #[test]
+    fn by_interval_ascending_works_with_g_flat() {
+        test_case("Gb", PerfectUnison, "Gb");
+        test_case("Gb", MinorSecond, "Abb");
+        test_case("Gb", MajorSecond, "Ab");
+        test_case("Gb", MinorThird, "Bbb");
+        test_case("Gb", MajorThird, "Bb");
+        test_case("Gb", PerfectFourth, "Cb");
+        test_case("Gb", AugmentedFourth, "C");
+        test_case("Gb", DiminishedFifth, "Dbb");
+        test_case("Gb", PerfectFifth, "Db");
+        test_case("Gb", MinorSixth, "Ebb");
+        test_case("Gb", MajorSixth, "Eb");
+        test_case("Gb", MinorSeventh, "Fb");
+        test_case("Gb", MajorSeventh, "F");
+    }
+
+    #[test]
+    fn by_interval_ascending_works_with_g_sharp() {
+        test_case("G#", PerfectUnison, "G#");
+        test_case("G#", MinorSecond, "A");
+        test_case("G#", MajorSecond, "A#");
+        test_case("G#", MinorThird, "B");
+        test_case("G#", MajorThird, "B#");
+        test_case("G#", PerfectFourth, "C#");
+        test_case("G#", AugmentedFourth, "C##");
+        test_case("G#", DiminishedFifth, "D");
+        test_case("G#", PerfectFifth, "D#");
+        test_case("G#", MinorSixth, "E");
+        test_case("G#", MajorSixth, "E#");
+        test_case("G#", MinorSeventh, "F#");
+        test_case("G#", MajorSeventh, "F##");
     }
 }
