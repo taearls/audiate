@@ -59,11 +59,6 @@ impl Display for NotePitchName {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum NoteIntervalDirection {
-    Ascending,
-    Descending,
-}
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum NotePitchInterval {
     PerfectUnison,
