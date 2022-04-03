@@ -212,7 +212,7 @@ mod by_interval_ascending_test {
         let note = Note::try_from(start_note_name).unwrap();
         let actual = note.by_interval_ascending(interval);
         let expected = Note::try_from(end_note_name).unwrap();
-        assert_eq!(format!("{actual}"), format!("{expected}"));
+        assert_eq!(actual, expected);
     }
 
     #[test]
