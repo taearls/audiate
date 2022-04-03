@@ -13,14 +13,26 @@ lazy_static! {
 }
 
 pub fn note_name_to_pitch(note_name: NotePitchName) -> u8 {
+    use NotePitchName::*;
     match note_name {
-        NotePitchName::A => 1,
-        NotePitchName::B => 3,
-        NotePitchName::C => 4,
-        NotePitchName::D => 6,
-        NotePitchName::E => 8,
-        NotePitchName::F => 9,
-        NotePitchName::G => 11,
+        A => 1,
+        B => 3,
+        C => 4,
+        D => 6,
+        E => 8,
+        F => 9,
+        G => 11,
+    }
+}
+
+pub fn note_variant_to_pitch(note_variant: NotePitchVariant) -> i8 {
+    use NotePitchVariant::*;
+    match note_variant {
+        Flatdbl => -2,
+        Flat => -1,
+        Natural => 0,
+        Sharp => 1,
+        Sharpdbl => 2,
     }
 }
 
@@ -89,16 +101,6 @@ pub fn calc_name_by_interval(
     };
     let new_index = (original_idx + interval_index) % names.len();
     names[new_index]
-}
-
-pub fn calc_pitch_value(note_name: NotePitchName, pitch_variant: NotePitchVariant) -> Option<u8> {
-    let note_name_pitch_value = note_name_to_pitch(note_name);
-
-    Some(note_name_pitch_value + pitch_variant)
-}
-
-pub fn calc_pitch_value_from_interval(pitch_value: u8, interval: NotePitchInterval) -> u8 {
-    pitch_value + interval
 }
 
 pub fn calc_pitch_variant(note_name: &str) -> Option<NotePitchVariant> {
@@ -204,73 +206,6 @@ mod is_note_name_valid_test {
             let note = is_note_name_valid(str);
             assert!(note, "{} is a note", str);
         }
-    }
-}
-
-#[cfg(test)]
-mod calc_pitch_value_test {
-    use super::*;
-    use NotePitchName::*;
-    use NotePitchVariant::*;
-
-    fn test_case(note_name: NotePitchName, pitch_variant: NotePitchVariant, expected: u8) {
-        let actual = calc_pitch_value(note_name, pitch_variant);
-        assert_eq!(actual.unwrap(), expected);
-    }
-
-    #[test]
-    fn calc_pitch_value_returns_correct_natural_variant() {
-        test_case(A, Natural, 1);
-        test_case(B, Natural, 3);
-        test_case(C, Natural, 4);
-        test_case(D, Natural, 6);
-        test_case(E, Natural, 8);
-        test_case(F, Natural, 9);
-        test_case(G, Natural, 11);
-    }
-
-    #[test]
-    fn calc_pitch_value_returns_correct_flat_variant() {
-        test_case(A, Flat, 0);
-        test_case(B, Flat, 2);
-        test_case(C, Flat, 3);
-        test_case(D, Flat, 5);
-        test_case(E, Flat, 7);
-        test_case(F, Flat, 8);
-        test_case(G, Flat, 10);
-    }
-
-    #[test]
-    fn calc_pitch_value_returns_correct_flatdbl_variant() {
-        test_case(A, Flatdbl, 11);
-        test_case(B, Flatdbl, 1);
-        test_case(C, Flatdbl, 2);
-        test_case(D, Flatdbl, 4);
-        test_case(E, Flatdbl, 6);
-        test_case(F, Flatdbl, 7);
-        test_case(G, Flatdbl, 9);
-    }
-
-    #[test]
-    fn calc_pitch_value_returns_correct_sharp_variant() {
-        test_case(A, Sharp, 2);
-        test_case(B, Sharp, 4);
-        test_case(C, Sharp, 5);
-        test_case(D, Sharp, 7);
-        test_case(E, Sharp, 9);
-        test_case(F, Sharp, 10);
-        test_case(G, Sharp, 0);
-    }
-
-    #[test]
-    fn calc_pitch_value_returns_correct_sharpdbl_variant() {
-        test_case(A, Sharpdbl, 3);
-        test_case(B, Sharpdbl, 5);
-        test_case(C, Sharpdbl, 6);
-        test_case(D, Sharpdbl, 8);
-        test_case(E, Sharpdbl, 10);
-        test_case(F, Sharpdbl, 11);
-        test_case(G, Sharpdbl, 1);
     }
 }
 
