@@ -11,6 +11,13 @@ pub struct Note {
 }
 
 impl Note {
+    pub fn new(name: NotePitchName, pitch_variant: NotePitchVariant) -> Self {
+        Self {
+            name,
+            pitch_variant,
+        }
+    }
+
     pub fn name(&self) -> NotePitchName {
         self.name
     }
@@ -33,6 +40,7 @@ impl Note {
             ((util::note_variant_to_pitch(self.pitch_variant) + 12) % 12) as u8;
         (note_name_pitch + note_variant_pitch) % 12
     }
+
     // TODO: find way to remove Option, or perhaps provide a separate fn that doesn't return an Option
     fn by_interval(&self, interval: NotePitchInterval) -> Option<Note> {
         let name = util::calc_name_by_interval(self.name, interval);
@@ -64,12 +72,12 @@ impl TryFrom<&str> for Note {
                 "Note name &str provided failed validation. {name} is not a valid note name"
             ));
         }
-        let note_name = util::calc_note_name(&note_name_str);
-        let pitch_variant = util::calc_pitch_variant(&note_name_str);
+        let note_name = NotePitchName::try_from(&note_name_str);
+        let pitch_variant = NotePitchVariant::try_from(&note_name_str);
 
-        if note_name.is_none() {
+        if note_name.is_err() {
             return Err(format!("Unable to construct NotePitchName with {name}"));
-        } else if pitch_variant.is_none() {
+        } else if pitch_variant.is_err() {
             return Err(format!("Unable to construct NotePitchVariant with {name}"));
         }
         let note_name = note_name.unwrap();
@@ -80,18 +88,23 @@ impl TryFrom<&str> for Note {
         })
     }
 }
-impl TryFrom<String> for Note {
-    type Error = &'static str;
+impl TryFrom<&String> for Note {
+    type Error = String;
 
-    fn try_from(name: String) -> Result<Self, Self::Error> {
-        let note_name_str: String = name.to_uppercase();
+    fn try_from(name: &String) -> Result<Self, Self::Error> {
+        let note_name_str: String = util::uppercase_first_char(name);
         if !util::is_note_name_valid(&note_name_str) {
-            return Err("{name} is not a valid note name");
+            return Err(format!(
+                "Note name &str provided failed validation. {name} is not a valid note name"
+            ));
         }
-        let note_name = util::calc_note_name(&note_name_str);
-        let pitch_variant = util::calc_pitch_variant(&note_name_str);
-        if note_name.is_none() || pitch_variant.is_none() {
-            return Err("{name} is not a valid note name");
+        let note_name = NotePitchName::try_from(&note_name_str);
+        let pitch_variant = NotePitchVariant::try_from(&note_name_str);
+
+        if note_name.is_err() {
+            return Err(format!("Unable to construct NotePitchName with {name}"));
+        } else if pitch_variant.is_err() {
+            return Err(format!("Unable to construct NotePitchVariant with {name}"));
         }
         let note_name = note_name.unwrap();
         let pitch_variant = pitch_variant.unwrap();

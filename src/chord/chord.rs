@@ -20,7 +20,6 @@ pub enum ChordQuality {
 
 // how to denote dominant / major seventh ?
 // how to denote suspended chords?
-//
 
 // describes the extensions of the chord.
 // each value includes the previous one.

@@ -7,11 +7,12 @@ use super::{interval::NotePitchInterval, name::NotePitchName, pitch_variant::Not
 lazy_static! {
   // check if str has a-g or A-G in one occurrence
   // check for one or two flats, or one or two sharps
-  static ref NOTE_REGEX: Regex = Regex::new(
+  pub static ref NOTE_REGEX: Regex = Regex::new(
     r"^(?P<note_name>(?i)[a-g]{1})(?P<note_variant>(?-i)(b{1,2})|(#{1,2}))?$"
   ).unwrap();
 }
 
+// TODO: convert this to a From<NotePitchName> impl for u8
 pub fn note_name_to_pitch(note_name: NotePitchName) -> u8 {
     use NotePitchName::*;
     match note_name {
@@ -25,6 +26,7 @@ pub fn note_name_to_pitch(note_name: NotePitchName) -> u8 {
     }
 }
 
+// TODO: convert this to a From<NotePitchVariant> impl for i8
 pub fn note_variant_to_pitch(note_variant: NotePitchVariant) -> i8 {
     use NotePitchVariant::*;
     match note_variant {
@@ -33,19 +35,6 @@ pub fn note_variant_to_pitch(note_variant: NotePitchVariant) -> i8 {
         Natural => 0,
         Sharp => 1,
         Sharpdbl => 2,
-    }
-}
-
-pub fn calc_note_name(note_name: &str) -> Option<NotePitchName> {
-    match note_name.to_uppercase().chars().next() {
-        Some('A') => Some(NotePitchName::A),
-        Some('B') => Some(NotePitchName::B),
-        Some('C') => Some(NotePitchName::C),
-        Some('D') => Some(NotePitchName::D),
-        Some('E') => Some(NotePitchName::E),
-        Some('F') => Some(NotePitchName::F),
-        Some('G') => Some(NotePitchName::G),
-        _ => None,
     }
 }
 
@@ -69,12 +58,9 @@ pub fn calc_pitch_variant_by_name_and_pitch_value(
         None
     }
 }
+
+// TODO: remove this method, check REGEX inline
 pub fn is_note_name_valid(note_name: &str) -> bool {
-    println!(
-        "length constraint: {}, regex match: {}",
-        (1..=3).contains(&note_name.len()),
-        NOTE_REGEX.is_match(note_name)
-    );
     (1..=3).contains(&note_name.len()) && NOTE_REGEX.is_match(note_name)
 }
 
@@ -103,26 +89,7 @@ pub fn calc_name_by_interval(
     names[new_index]
 }
 
-pub fn calc_pitch_variant(note_name: &str) -> Option<NotePitchVariant> {
-    if !is_note_name_valid(note_name) {
-        return None;
-    }
-
-    let note_variant = NOTE_REGEX.captures(note_name).and_then(|cap| {
-        cap.name("note_variant")
-            .map(|note_variant| note_variant.as_str())
-    });
-    match note_variant {
-        Some("b") => Some(NotePitchVariant::Flat),
-        Some("bb") => Some(NotePitchVariant::Flatdbl),
-        Some("#") => Some(NotePitchVariant::Sharp),
-        Some("##") => Some(NotePitchVariant::Sharpdbl),
-        Some(_) => None,
-        None => Some(NotePitchVariant::Natural),
-    }
-}
-
-// TODO: add unit tests
+// TODO: add unit tests for this fn
 pub fn uppercase_first_char(input: &str) -> String {
     let mut c = input.chars();
     match c.next() {
@@ -160,7 +127,6 @@ mod is_note_name_valid_test {
 
     #[test]
     fn is_note_name_valid_false_when_invalid_string_passed() {
-        // TODO: create helper_fn to reuse an invalid note name str
         let note = is_note_name_valid("");
         assert!(!note, " is not a note");
         let note = is_note_name_valid("Ac");
@@ -205,47 +171,6 @@ mod is_note_name_valid_test {
         for str in test_helper_fns::sharpdbl_note_name_str().split(' ') {
             let note = is_note_name_valid(str);
             assert!(note, "{} is a note", str);
-        }
-    }
-}
-
-#[cfg(test)]
-mod calc_pitch_variant_test {
-    use super::*;
-
-    #[test]
-    fn calc_pitch_variant_returns_natural() {
-        for str in test_helper_fns::natural_note_name_str().split(' ') {
-            let pitch_variant = calc_pitch_variant(str);
-            assert_eq!(pitch_variant, Some(NotePitchVariant::Natural));
-        }
-    }
-    #[test]
-    fn calc_pitch_variant_returns_flat() {
-        for str in test_helper_fns::flat_note_name_str().split(' ') {
-            let pitch_variant = calc_pitch_variant(str);
-            assert_eq!(pitch_variant, Some(NotePitchVariant::Flat));
-        }
-    }
-    #[test]
-    fn calc_pitch_variant_returns_flatdbl() {
-        for str in test_helper_fns::flatdbl_note_name_str().split(' ') {
-            let pitch_variant = calc_pitch_variant(str);
-            assert_eq!(pitch_variant, Some(NotePitchVariant::Flatdbl));
-        }
-    }
-    #[test]
-    fn calc_pitch_variant_returns_sharp() {
-        for str in test_helper_fns::sharp_note_name_str().split(' ') {
-            let pitch_variant = calc_pitch_variant(str);
-            assert_eq!(pitch_variant, Some(NotePitchVariant::Sharp));
-        }
-    }
-    #[test]
-    fn calc_pitch_variant_returns_sharpdbl() {
-        for str in test_helper_fns::sharpdbl_note_name_str().split(' ') {
-            let pitch_variant = calc_pitch_variant(str);
-            assert_eq!(pitch_variant, Some(NotePitchVariant::Sharpdbl));
         }
     }
 }
