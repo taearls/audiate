@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::note::Note;
 
 #[derive(Debug, Clone, PartialEq)]
