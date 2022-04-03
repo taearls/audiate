@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::note::Note;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -19,7 +20,6 @@ pub enum ChordQuality {
 
 // how to denote dominant / major seventh ?
 // how to denote suspended chords?
-//
 
 // describes the extensions of the chord.
 // each value includes the previous one.
@@ -34,20 +34,14 @@ pub enum ChordExtensionKind {
 }
 
 impl Chord {
-    // pub fn new(root: &str, quality: ChordQuality) -> Result<Chord, &str> {
-      // Chord {
-      //   name,
-      //   quality,
-      //   root
-      // }
-    // }
     pub fn name(&self) -> &str {
         &self.name
     }
     pub fn quality(&self) -> ChordQuality {
         self.quality
     }
-    pub fn root(&self) -> &str {
-        &self.root.name()
+    pub fn root(&self) -> String {
+        let name = self.root.name();
+        format!("{}", name)
     }
 }
