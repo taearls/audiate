@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 
-use super::util;
+use super::name::{is_note_name_valid, note_variant_from_note_name};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum NotePitchVariant {
@@ -13,12 +13,13 @@ pub enum NotePitchVariant {
 
 impl Display for NotePitchVariant {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        use NotePitchVariant::*;
         let name: &str = match self {
-            NotePitchVariant::Flatdbl => "bb",
-            NotePitchVariant::Flat => "b",
-            NotePitchVariant::Natural => "",
-            NotePitchVariant::Sharp => "#",
-            NotePitchVariant::Sharpdbl => "##",
+            Flatdbl => "bb",
+            Flat => "b",
+            Natural => "",
+            Sharp => "#",
+            Sharpdbl => "##",
         };
         write!(f, "{name}")
     }
@@ -27,13 +28,7 @@ impl Display for NotePitchVariant {
 impl std::ops::Add<NotePitchVariant> for u8 {
     type Output = Self;
     fn add(self, other: NotePitchVariant) -> Self {
-        let pitch_variant_value: i8 = match other {
-            NotePitchVariant::Flatdbl => -2,
-            NotePitchVariant::Flat => -1,
-            NotePitchVariant::Natural => 0,
-            NotePitchVariant::Sharp => 1,
-            NotePitchVariant::Sharpdbl => 2,
-        };
+        let pitch_variant_value = i8::from(other);
 
         // we add 12 to prevent underflow
         let sum = (self as i8 + 12 + pitch_variant_value) as u8;
@@ -43,25 +38,36 @@ impl std::ops::Add<NotePitchVariant> for u8 {
     }
 }
 
+impl From<NotePitchVariant> for i8 {
+    fn from(variant: NotePitchVariant) -> i8 {
+        use NotePitchVariant::*;
+        match variant {
+            Flatdbl => -2,
+            Flat => -1,
+            Natural => 0,
+            Sharp => 1,
+            Sharpdbl => 2,
+        }
+    }
+}
+
 impl TryFrom<&str> for NotePitchVariant {
     type Error = String;
 
     fn try_from(note_name: &str) -> Result<Self, Self::Error> {
-        if !util::is_note_name_valid(note_name) {
+        use NotePitchVariant::*;
+        if !is_note_name_valid(note_name) {
             return Err(format!("{note_name} is not a valid note name"));
         }
 
-        let note_variant = util::NOTE_REGEX.captures(note_name).and_then(|cap| {
-            cap.name("note_variant")
-                .map(|note_variant| note_variant.as_str())
-        });
+        let note_variant = note_variant_from_note_name(note_name);
         match note_variant {
-            Some("b") => Ok(NotePitchVariant::Flat),
-            Some("bb") => Ok(NotePitchVariant::Flatdbl),
-            Some("#") => Ok(NotePitchVariant::Sharp),
-            Some("##") => Ok(NotePitchVariant::Sharpdbl),
+            Some("b") => Ok(Flat),
+            Some("bb") => Ok(Flatdbl),
+            Some("#") => Ok(Sharp),
+            Some("##") => Ok(Sharpdbl),
             Some(s) => Err(format!("{s} is not a valid note variant")),
-            None => Ok(NotePitchVariant::Natural),
+            None => Ok(Natural),
         }
     }
 }
@@ -70,21 +76,19 @@ impl TryFrom<&String> for NotePitchVariant {
     type Error = String;
 
     fn try_from(note_name: &String) -> Result<Self, Self::Error> {
-        if !util::is_note_name_valid(note_name) {
+        use NotePitchVariant::*;
+        if !is_note_name_valid(note_name) {
             return Err(format!("{note_name} is not a valid note name"));
         }
 
-        let note_variant = util::NOTE_REGEX.captures(note_name).and_then(|cap| {
-            cap.name("note_variant")
-                .map(|note_variant| note_variant.as_str())
-        });
+        let note_variant = note_variant_from_note_name(note_name);
         match note_variant {
-            Some("b") => Ok(NotePitchVariant::Flat),
-            Some("bb") => Ok(NotePitchVariant::Flatdbl),
-            Some("#") => Ok(NotePitchVariant::Sharp),
-            Some("##") => Ok(NotePitchVariant::Sharpdbl),
+            Some("b") => Ok(Flat),
+            Some("bb") => Ok(Flatdbl),
+            Some("#") => Ok(Sharp),
+            Some("##") => Ok(Sharpdbl),
             Some(s) => Err(format!("{s} is not a valid note variant")),
-            None => Ok(NotePitchVariant::Natural),
+            None => Ok(Natural),
         }
     }
 }

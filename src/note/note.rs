@@ -1,7 +1,10 @@
 use std::fmt::{Display, Formatter};
 
 use super::{
-    interval::NotePitchInterval, name::NotePitchName, pitch_variant::NotePitchVariant, util,
+    interval::NotePitchInterval,
+    name::{is_note_name_valid, NotePitchName},
+    pitch_variant::NotePitchVariant,
+    util,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -26,30 +29,28 @@ impl Note {
         self.pitch_variant
     }
 
-    pub fn by_interval_ascending(&self, interval: NotePitchInterval) -> Option<Note> {
+    pub fn by_interval_ascending(&self, interval: NotePitchInterval) -> Note {
         self.by_interval(interval)
     }
 
-    pub fn by_interval_descending(&self, interval: NotePitchInterval) -> Option<Note> {
+    pub fn by_interval_descending(&self, interval: NotePitchInterval) -> Note {
         self.by_interval(interval.invert())
     }
 
     fn pitch_value(&self) -> u8 {
-        let note_name_pitch = util::note_name_to_pitch(self.name);
-        let note_variant_pitch =
-            ((util::note_variant_to_pitch(self.pitch_variant) + 12) % 12) as u8;
+        let note_name_pitch = u8::from(self.name);
+        let note_variant_pitch = ((i8::from(self.pitch_variant) + 12) % 12) as u8;
         (note_name_pitch + note_variant_pitch) % 12
     }
 
-    // TODO: find way to remove Option, or perhaps provide a separate fn that doesn't return an Option
-    fn by_interval(&self, interval: NotePitchInterval) -> Option<Note> {
-        let name = util::calc_name_by_interval(self.name, interval);
+    fn by_interval(&self, interval: NotePitchInterval) -> Note {
+        let name = self.name.by_interval(interval);
         let pitch_value = self.pitch_value() + interval;
-
-        Some(Note {
+        let pitch_variant = calc_pitch_variant_by_name_and_pitch_value(name, pitch_value);
+        Note {
             name,
-            pitch_variant: util::calc_pitch_variant_by_name_and_pitch_value(name, pitch_value)?,
-        })
+            pitch_variant,
+        }
     }
 }
 
@@ -67,7 +68,7 @@ impl TryFrom<&str> for Note {
 
     fn try_from(name: &str) -> Result<Self, Self::Error> {
         let note_name_str: String = util::uppercase_first_char(name);
-        if !util::is_note_name_valid(&note_name_str) {
+        if !is_note_name_valid(&note_name_str) {
             return Err(format!(
                 "Note name &str provided failed validation. {name} is not a valid note name"
             ));
@@ -93,7 +94,7 @@ impl TryFrom<&String> for Note {
 
     fn try_from(name: &String) -> Result<Self, Self::Error> {
         let note_name_str: String = util::uppercase_first_char(name);
-        if !util::is_note_name_valid(&note_name_str) {
+        if !is_note_name_valid(&note_name_str) {
             return Err(format!(
                 "Note name &str provided failed validation. {name} is not a valid note name"
             ));
@@ -112,6 +113,28 @@ impl TryFrom<&String> for Note {
             name: note_name,
             pitch_variant,
         })
+    }
+}
+
+fn calc_pitch_variant_by_name_and_pitch_value(
+    name: NotePitchName,
+    pitch_value: u8,
+) -> NotePitchVariant {
+    use NotePitchVariant::*;
+    let note_name_pitch_value = u8::from(name);
+
+    if note_name_pitch_value + Flatdbl == pitch_value {
+        Flatdbl
+    } else if note_name_pitch_value + Flat == pitch_value {
+        Flat
+    } else if note_name_pitch_value + Natural == pitch_value {
+        Natural
+    } else if note_name_pitch_value + Sharp == pitch_value {
+        Sharp
+    } else if note_name_pitch_value + Sharpdbl == pitch_value {
+        Sharpdbl
+    } else {
+        unreachable!("We know the pitch value associated with the given note name is within 2 where this is called, because the starting value is derived from the Note struct, and the new one is calculated with the NotePitchInterval struct.")
     }
 }
 
@@ -197,7 +220,7 @@ mod by_interval_ascending_test {
 
     fn test_case(start_note_name: &str, interval: NotePitchInterval, end_note_name: &str) {
         let note = Note::try_from(start_note_name).unwrap();
-        let actual = note.by_interval_ascending(interval).unwrap();
+        let actual = note.by_interval_ascending(interval);
         let expected = Note::try_from(end_note_name).unwrap();
         assert_eq!(format!("{actual}"), format!("{expected}"));
     }
@@ -567,7 +590,7 @@ mod by_interval_descending_test {
 
     fn test_case(start_note_name: &str, interval: NotePitchInterval, end_note_name: &str) {
         let note = Note::try_from(start_note_name).unwrap();
-        let actual = note.by_interval_descending(interval).unwrap();
+        let actual = note.by_interval_descending(interval);
         let expected = Note::try_from(end_note_name).unwrap();
         assert_eq!(format!("{actual}"), format!("{expected}"));
     }
