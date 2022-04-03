@@ -11,6 +11,7 @@ use super::{
 pub struct Note {
     name: NotePitchName,
     pitch_variant: NotePitchVariant,
+    pitch_value: u8, // bounded between 0..=11
 }
 
 impl Note {
@@ -18,6 +19,7 @@ impl Note {
         Self {
             name,
             pitch_variant,
+            pitch_value: Note::pitch_value(name, pitch_variant),
         }
     }
 
@@ -37,20 +39,17 @@ impl Note {
         self.by_interval(interval.invert())
     }
 
-    fn pitch_value(&self) -> u8 {
-        let note_name_pitch = u8::from(self.name);
-        let note_variant_pitch = ((i8::from(self.pitch_variant) + 12) % 12) as u8;
+    fn pitch_value(name: NotePitchName, pitch_variant: NotePitchVariant) -> u8 {
+        let note_name_pitch = u8::from(name);
+        let note_variant_pitch = ((i8::from(pitch_variant) + 12) % 12) as u8;
         (note_name_pitch + note_variant_pitch) % 12
     }
 
     fn by_interval(&self, interval: NotePitchInterval) -> Note {
         let name = self.name.by_interval(interval);
-        let pitch_value = self.pitch_value() + interval;
-        let pitch_variant = calc_pitch_variant_by_name_and_pitch_value(name, pitch_value);
-        Note {
-            name,
-            pitch_variant,
-        }
+        let root_pitch_value = self.pitch_value + interval;
+        let pitch_variant = calc_pitch_variant_by_name_and_pitch_value(name, root_pitch_value);
+        Note::new(name, pitch_variant)
     }
 }
 
@@ -83,10 +82,7 @@ impl TryFrom<&str> for Note {
         }
         let note_name = note_name.unwrap();
         let pitch_variant = pitch_variant.unwrap();
-        Ok(Note {
-            name: note_name,
-            pitch_variant,
-        })
+        Ok(Note::new(note_name, pitch_variant))
     }
 }
 impl TryFrom<&String> for Note {
@@ -109,10 +105,7 @@ impl TryFrom<&String> for Note {
         }
         let note_name = note_name.unwrap();
         let pitch_variant = pitch_variant.unwrap();
-        Ok(Note {
-            name: note_name,
-            pitch_variant,
-        })
+        Ok(Note::new(note_name, pitch_variant))
     }
 }
 
@@ -149,11 +142,8 @@ mod pitch_value_test {
     use NotePitchVariant::*;
 
     fn test_case(note_name: NotePitchName, pitch_variant: NotePitchVariant, expected: u8) {
-        let note = Note {
-            name: note_name,
-            pitch_variant,
-        };
-        let actual = note.pitch_value();
+        let note = Note::new(note_name, pitch_variant);
+        let actual = note.pitch_value;
         assert_eq!(actual, expected);
     }
 
