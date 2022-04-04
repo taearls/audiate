@@ -7,3 +7,5 @@ mod note;
 pub use note::Note;
 
 pub mod chord;
+
+pub mod scale;
