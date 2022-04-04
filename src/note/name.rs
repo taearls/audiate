@@ -118,6 +118,21 @@ impl From<NotePitchName> for u8 {
     }
 }
 
+impl From<NotePitchName> for &str {
+    fn from(note_pitch_name: NotePitchName) -> &'static str {
+        use NotePitchName::*;
+        match note_pitch_name {
+            A => "A",
+            B => "B",
+            C => "C",
+            D => "D",
+            E => "E",
+            F => "F",
+            G => "G",
+        }
+    }
+}
+
 // global static regex to parse a note from a string slice that's only compiled once
 lazy_static! {
   // check if str has a-g or A-G in one occurrence
