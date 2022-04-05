@@ -1,7 +1,9 @@
 #![allow(dead_code)]
 use crate::note::NotePitchInterval;
 
-#[derive(Clone, Copy)]
+use super::ScaleDirection;
+
+#[derive(Clone, Copy, PartialEq)]
 pub enum ScaleKind {
     Ionian,
     Dorian,
@@ -22,11 +24,11 @@ pub enum ScaleKind {
 }
 
 impl ScaleKind {
-    fn intervals(&self, _descending: bool) -> Vec<NotePitchInterval> {
+    pub fn intervals(&self, direction: ScaleDirection) -> Vec<NotePitchInterval> {
         use NotePitchInterval::*;
         use ScaleKind::*;
 
-        match self {
+        let mut result = match self {
             Ionian | Major => vec![
                 MajorSecond,
                 MajorSecond,
@@ -144,13 +146,14 @@ impl ScaleKind {
                 MajorSecond,
                 MinorSecond,
             ],
+        };
+        if direction == ScaleDirection::Descending {
+            result = match self {
+                MelodicMinor => Aeolian.intervals(ScaleDirection::Descending),
+                _ => result.into_iter().rev().collect(),
+            }
         }
-        // if descending {
-        //     if self != MelodicMinor {
-        //         result.rev()
-        //     } else {
-        //         vec![MinorSecond, MajorSecond, MinorSecond, MajorSecond, MinorSecond, MajorSecond, MinorSecond, MajorSecond]
-        //     }
-        // }
+
+        result
     }
 }

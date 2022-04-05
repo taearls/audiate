@@ -61,12 +61,6 @@ impl Display for Note {
     }
 }
 
-impl From<Note> for &str {
-    fn from(note: Note) -> Self {
-        note.name.into()
-    }
-}
-
 // cannot make this TryFrom impl generic https://github.com/rust-lang/rust/issues/50133
 impl TryFrom<&str> for Note {
     type Error = String;
