@@ -26,6 +26,7 @@ pub enum ScaleKind {
 impl ScaleKind {
     pub fn intervals(&self, direction: ScaleDirection) -> Vec<NotePitchInterval> {
         use NotePitchInterval::*;
+        use ScaleDirection::*;
         use ScaleKind::*;
 
         let mut result = match self {
@@ -147,11 +148,14 @@ impl ScaleKind {
                 MinorSecond,
             ],
         };
-        if direction == ScaleDirection::Descending {
-            result = match self {
-                MelodicMinor => Aeolian.intervals(ScaleDirection::Descending),
-                _ => result.into_iter().rev().collect(),
+        match direction {
+            Descending | DescendingAscending => {
+                result = match self {
+                    MelodicMinor => Aeolian.intervals(Descending),
+                    _ => result.into_iter().rev().collect(),
+                }
             }
+            _ => {}
         }
 
         result
