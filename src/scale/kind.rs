@@ -5,6 +5,10 @@ use super::ScaleDirection;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum ScaleKind {
+    Major,
+    Minor,
+    MajorPentatonic,
+    MinorPentatonic,
     Ionian,
     Dorian,
     Phrygian,
@@ -12,15 +16,11 @@ pub enum ScaleKind {
     Mixolydian,
     Aeolian,
     Locrian,
-    Major,
-    Minor,
-    MajorPentatonic,
-    MinorPentatonic,
     HarmonicMinor,
     MelodicMinor,
-    HalfWhole,
-    WholeHalf,
-    WholeTone,
+    // HalfWhole,
+    // WholeHalf,
+    // WholeTone,
 }
 
 impl ScaleKind {
@@ -113,31 +113,9 @@ impl ScaleKind {
                 MajorSecond,
                 MajorSecond,
                 MinorSecond,
-                MinorThird,
+                AugmentedSecond,
                 MinorSecond,
             ],
-            HalfWhole => vec![
-                MinorSecond,
-                MajorSecond,
-                MinorSecond,
-                MajorSecond,
-                MinorSecond,
-                MajorSecond,
-                MinorSecond,
-                MajorSecond,
-            ],
-            WholeHalf => vec![
-                MajorSecond,
-                MinorSecond,
-                MajorSecond,
-                MinorSecond,
-                MajorSecond,
-                MinorSecond,
-                MajorSecond,
-                MinorSecond,
-            ],
-            WholeTone => vec![MajorSecond; 6],
-            // TODO: handle descending direction being different
             MelodicMinor => vec![
                 MajorSecond,
                 MinorSecond,
@@ -147,6 +125,27 @@ impl ScaleKind {
                 MajorSecond,
                 MinorSecond,
             ],
+            // HalfWhole => vec![
+            //     MinorSecond,
+            //     MajorSecond,
+            //     MinorSecond,
+            //     MajorSecond,
+            //     MinorSecond,
+            //     MajorSecond,
+            //     MinorSecond,
+            //     MajorSecond,
+            // ],
+            // WholeHalf => vec![
+            //     MajorSecond,
+            //     MinorSecond,
+            //     MajorSecond,
+            //     MinorSecond,
+            //     MajorSecond,
+            //     MinorSecond,
+            //     MajorSecond,
+            //     MinorSecond,
+            // ],
+            // WholeTone => vec![MajorSecond; 6],
         };
         match direction {
             Descending | DescendingAscending => {

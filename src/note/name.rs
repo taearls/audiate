@@ -37,12 +37,12 @@ impl NotePitchName {
             .unwrap();
         let interval_index: usize = match pitch_interval {
             PerfectUnison => 0,
-            MinorSecond | MajorSecond => 1,
+            MinorSecond | MajorSecond | AugmentedSecond => 1,
             MinorThird | MajorThird => 2,
             PerfectFourth | AugmentedFourth => 3,
             DiminishedFifth | PerfectFifth => 4,
             MinorSixth | MajorSixth => 5,
-            MinorSeventh | MajorSeventh => 6,
+            DiminishedSeventh | MinorSeventh | MajorSeventh => 6,
         };
         let new_index = (original_idx + interval_index) % NOTE_PITCH_NAMES.len();
         NOTE_PITCH_NAMES[new_index]
