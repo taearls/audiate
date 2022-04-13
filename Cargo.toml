@@ -3,6 +3,8 @@ name = "audiate"
 version = "0.1.0"
 authors = ["Tyler Earls <tyler.a.earls@gmail.com>"]
 edition = "2021"
+license = "MIT"
+description = "A library that applies Rust bindings to music theory concepts. Generate scales and chords! Study relationships between different notes and intervals."
 
 [dependencies]
 regex = "1.4.3"
