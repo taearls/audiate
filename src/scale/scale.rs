@@ -20,7 +20,7 @@ pub enum ScaleDirection {
 impl Scale {
     pub fn new(root_note: Note, kind: ScaleKind, direction: ScaleDirection) -> Self {
         Self {
-            notes: Scale::from_root_note_and_kind(root_note, kind, direction),
+            notes: Scale::notes_from_root(root_note, kind, direction),
             kind,
             direction,
         }
@@ -47,7 +47,7 @@ impl Scale {
         result
     }
 
-    fn from_root_note_and_kind(
+    fn notes_from_root(
         root_note: Note,
         kind: ScaleKind,
         direction: ScaleDirection,
@@ -68,11 +68,11 @@ impl Scale {
         }
         match direction {
             AscendingDescending => {
-                let second_half = Scale::from_root_note_and_kind(root_note, kind, Descending);
+                let second_half = Scale::notes_from_root(root_note, kind, Descending);
                 result.extend_from_slice(&second_half[1..]);
             }
             DescendingAscending => {
-                let second_half = Scale::from_root_note_and_kind(root_note, kind, Ascending);
+                let second_half = Scale::notes_from_root(root_note, kind, Ascending);
                 result.extend_from_slice(&second_half[1..]);
             }
             _ => {}
