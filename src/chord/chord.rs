@@ -3,7 +3,6 @@ use crate::note::Note;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Chord {
-    name: String,
     quality: ChordQuality,
     root: Note,
 }
@@ -34,9 +33,6 @@ pub enum ChordExtensionKind {
 }
 
 impl Chord {
-    pub fn name(&self) -> &str {
-        &self.name
-    }
     pub fn quality(&self) -> ChordQuality {
         self.quality
     }
