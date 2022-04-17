@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use crate::note::Note;
 
 use super::ScaleKind;
@@ -32,6 +31,10 @@ impl Scale {
 
     pub fn notes(self) -> Vec<Note> {
         self.notes
+    }
+
+    pub fn direction(self) -> ScaleDirection {
+        self.direction
     }
 
     pub fn print(&self) -> String {
