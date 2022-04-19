@@ -76,7 +76,6 @@ impl Scale {
             }
             _ => {}
         }
-
         result
     }
 }

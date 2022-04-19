@@ -2,10 +2,10 @@
 // #![cfg_attr(test, deny(warnings))]
 #![allow(clippy::module_inception)]
 
-mod note;
-pub use note::Note;
-
-pub mod chord;
+pub mod note;
+pub use note::{Note, NotePitchInterval};
 
 pub mod scale;
-pub use scale::Scale;
+pub use scale::{Scale, ScaleDirection, ScaleKind};
+
+pub mod chord;

@@ -1,6 +1,6 @@
 use audiate::{
+    note::Note,
     scale::{Scale, ScaleDirection, ScaleKind},
-    Note,
 };
 
 #[cfg(test)]

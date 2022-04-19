@@ -60,7 +60,7 @@ impl std::ops::Add<NotePitchInterval> for u8 {
             PerfectUnison => 0,
             MinorSecond => 1,
             MajorSecond => 2,
-            MinorThird | AugmentedSecond => 3,
+            AugmentedSecond | MinorThird => 3,
             MajorThird => 4,
             PerfectFourth => 5,
             AugmentedFourth | DiminishedFifth => 6,
