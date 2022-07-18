@@ -6,19 +6,69 @@ Audiate is a library that allows you to generate notes, chords, and scales. It u
 
 This library and its public API are under development and subject to change. I'm building a minimal feature set towards an eventual 0.0.1 release. More details in the Roadmap section below.
 
+### Chords
+Generate C major, minor, augmented, and diminished chords from a root C note.
+
 ```rust
-// main.rs
-use audiate::{Note, Chord, ChordQuality};
+use audiate::{
+    chord::{Chord, ChordQuality},
+    Note,
+};
+let root_note = Note::try_from("C").unwrap();
 
-fn main() {
-    let root_note = Note::try_from("C").unwrap();
-    let chord = Chord::new(root_note, ChordQuality::Major);
+let major_chord = Chord::new(root_note, ChordQuality::Major);
+assert_eq!(root_note, major_chord.root());
+assert_eq!(Note::try_from("E").unwrap(), major_chord.third());
+assert_eq!(Note::try_from("G").unwrap(), major_chord.fifth());
 
-    // arpeggiate the chord, starting from the root note, C.
-    assert_eq!(root_note, chord.root());
-    assert_eq!(Note::try_from("E").unwrap(), chord.third());
-    assert_eq!(Note::try_from("G").unwrap(), chord.fifth());
-}
+let minor_chord = Chord::new(root_note, ChordQuality::Minor);
+assert_eq!(root_note, minor_chord.root());
+assert_eq!(Note::try_from("Eb").unwrap(), minor_chord.third());
+assert_eq!(Note::try_from("G").unwrap(), minor_chord.fifth());
+
+let diminished_chord = Chord::new(root_note, ChordQuality::Diminished);
+assert_eq!(root_note, diminished_chord.root());
+assert_eq!(Note::try_from("Eb").unwrap(), diminished_chord.third());
+assert_eq!(Note::try_from("Gb").unwrap(), diminished_chord.fifth());
+
+let augmented_chord = Chord::new(root_note, ChordQuality::Augmented);
+assert_eq!(root_note, augmented_chord.root());
+assert_eq!(Note::try_from("E").unwrap(), augmented_chord.third());
+assert_eq!(Note::try_from("G#").unwrap(), augmented_chord.fifth());
+```
+
+### Scales
+Generate scales from a root C note.
+
+```rust
+use audiate::{
+    scale::{Scale, ScaleDirection, ScaleKind},
+    Note,
+};
+let root_note = Note::try_from("C").unwrap();
+
+let major_scale = Scale::new(root_note, ScaleKind::Major, ScaleDirection::Ascending);
+assert_eq!(String::from("C D E F G A B C"), major_scale.print());
+
+let minor_scale = Scale::new(root_note, ScaleKind::Minor, ScaleDirection::Ascending);
+assert_eq!(String::from("C D Eb F G Ab Bb C"), minor_scale.print());
+
+let harmonic_minor_scale = Scale::new(
+    root_note,
+    ScaleKind::HarmonicMinor,
+    ScaleDirection::Ascending,
+);
+assert_eq!(
+    String::from("C D Eb F G Ab B C"),
+    harmonic_minor_scale.print()
+);
+
+let major_pentatonic_scale = Scale::new(
+    root_note,
+    ScaleKind::MajorPentatonic,
+    ScaleDirection::Ascending,
+);
+assert_eq!(String::from("C D E G A C"), major_pentatonic_scale.print());
 ```
 
 ## Roadmap
@@ -27,13 +77,11 @@ fn main() {
 
 A list of items that need to be completed before the first publish to crates.io
 
-- [x] Configure this as library, not binary application
-
 - [x] Note module
     - [x] instantiate new
     - [x] getter methods
     - [x] interval method
-    - [x] unit tests
+    - [x] Unit tests
 
 - [x] Scale Module
     - [x] Major
@@ -41,19 +89,15 @@ A list of items that need to be completed before the first publish to crates.io
     - [x] Modes
     - [x] Harmonic Minor
     - [x] Melodic Minor
-    - [x] Whole Tone
-    - [x] Half Whole
-    - [x] Whole Half
-    - [x] Chromatic
     - [x] Pentatonic Scale
-    - [x] unit tests
+    - [x] Unit tests
 
 - [ ] Chord Module
     - [x] instantiate new
     - [x] getter methods
     - [x] major, minor, diminished, augmented triads
     - [ ] major + minor sevenths
-    - [ ] unit tests
+    - [ ] Unit tests
 
 - [ ] Documentation
     - [ ] High level overview
@@ -83,5 +127,9 @@ An ongoing and incomplete checklist of new features to add to this library after
     - [ ] suspensions
 
 - [ ] Scale Module
+    - [ ] Chromatic Scale
+    - [ ] Whole Tone
+    - [ ] Half Whole
+    - [ ] Whole Half
     - [ ] Multiple Octaves
     - [ ] Non-Western Scales
