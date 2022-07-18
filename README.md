@@ -7,7 +7,7 @@ Audiate is a library that allows you to generate notes, chords, and scales. It u
 This library and its public API are under development and subject to change. I'm building a minimal feature set towards an eventual 0.0.1 release. More details in the Roadmap section below.
 
 ### Chords
-Generate C major, minor, augmented, and diminished chords from a root C note.
+Generate C major, minor, diminished, and augmented chords from a root C note, and then read the root, third, and fifth of the chord.
 
 ```rust
 use audiate::{
@@ -38,7 +38,7 @@ assert_eq!(Note::try_from("G#").unwrap(), augmented_chord.fifth());
 ```
 
 ### Scales
-Generate scales from a root C note.
+Generate scales from a root C note, and then print the notes in the scale.
 
 ```rust
 use audiate::{
