@@ -39,8 +39,8 @@ impl NotePitchName {
             PerfectUnison => 0,
             MinorSecond | MajorSecond | AugmentedSecond => 1,
             MinorThird | MajorThird => 2,
-            PerfectFourth | AugmentedFourth => 3,
-            DiminishedFifth | PerfectFifth => 4,
+            DiminishedFourth | PerfectFourth | AugmentedFourth => 3,
+            DiminishedFifth | PerfectFifth | AugmentedFifth => 4,
             MinorSixth | MajorSixth => 5,
             DiminishedSeventh | MinorSeventh | MajorSeventh => 6,
         };
