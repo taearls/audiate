@@ -13,6 +13,7 @@
 //! let root_note = Note::try_from("C").unwrap();
 //! let chord = Chord::new(root_note, ChordQuality::Major);
 //!
+//! // arpeggiate the chord, starting from the root note, C.
 //! assert_eq!(root_note, chord.root());
 //! assert_eq!(Note::try_from("E").unwrap(), chord.third());
 //! assert_eq!(Note::try_from("G").unwrap(), chord.fifth());
