@@ -8,10 +8,12 @@ pub enum NotePitchInterval {
     AugmentedSecond,
     MinorThird,
     MajorThird,
+    DiminishedFourth,
     PerfectFourth,
     AugmentedFourth,
     DiminishedFifth,
     PerfectFifth,
+    AugmentedFifth,
     MinorSixth,
     MajorSixth,
     DiminishedSeventh,
@@ -41,10 +43,12 @@ impl NotePitchInterval {
             AugmentedSecond => DiminishedSeventh,
             MinorThird => MajorSixth,
             MajorThird => MinorSixth,
+            DiminishedFourth => AugmentedFifth,
             PerfectFourth => PerfectFifth,
             AugmentedFourth => DiminishedFifth,
             DiminishedFifth => AugmentedFourth,
             PerfectFifth => PerfectFourth,
+            AugmentedFifth => DiminishedFourth,
             MinorSixth => MajorThird,
             MajorSixth => MinorThird,
             DiminishedSeventh => AugmentedSecond,
@@ -57,19 +61,20 @@ impl NotePitchInterval {
 impl std::ops::Add<NotePitchInterval> for u8 {
     type Output = Self;
     fn add(self, other: NotePitchInterval) -> Self {
+        use NotePitchInterval::*;
         let pitch_interval_value: u8 = match other {
-            NotePitchInterval::PerfectUnison => 0,
-            NotePitchInterval::MinorSecond => 1,
-            NotePitchInterval::MajorSecond => 2,
-            NotePitchInterval::MinorThird | NotePitchInterval::AugmentedSecond => 3,
-            NotePitchInterval::MajorThird => 4,
-            NotePitchInterval::PerfectFourth => 5,
-            NotePitchInterval::AugmentedFourth | NotePitchInterval::DiminishedFifth => 6,
-            NotePitchInterval::PerfectFifth => 7,
-            NotePitchInterval::MinorSixth => 8,
-            NotePitchInterval::MajorSixth | NotePitchInterval::DiminishedSeventh => 9,
-            NotePitchInterval::MinorSeventh => 10,
-            NotePitchInterval::MajorSeventh => 11,
+            PerfectUnison => 0,
+            MinorSecond => 1,
+            MajorSecond => 2,
+            AugmentedSecond | MinorThird => 3,
+            MajorThird | DiminishedFourth => 4,
+            PerfectFourth => 5,
+            AugmentedFourth | DiminishedFifth => 6,
+            PerfectFifth => 7,
+            AugmentedFifth | MinorSixth => 8,
+            MajorSixth | DiminishedSeventh => 9,
+            MinorSeventh => 10,
+            MajorSeventh => 11,
         };
         let sum = self + pitch_interval_value;
         // we want only pitch values to be in the range of 0-11 inclusive

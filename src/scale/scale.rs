@@ -47,11 +47,7 @@ impl Scale {
         result
     }
 
-    fn notes_from_root(
-        root_note: Note,
-        kind: ScaleKind,
-        direction: ScaleDirection,
-    ) -> Vec<Note> {
+    fn notes_from_root(root_note: Note, kind: ScaleKind, direction: ScaleDirection) -> Vec<Note> {
         use ScaleDirection::*;
         let mut result: Vec<Note> = vec![root_note];
 

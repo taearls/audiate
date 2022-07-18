@@ -1,2 +1,2 @@
 mod chord;
-pub use chord::Chord;
+pub use chord::{Chord, ChordQuality};

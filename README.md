@@ -4,7 +4,21 @@ Audiate is a library that allows you to generate notes, chords, and scales. It u
 
 ## Usage
 
-... fill out with code snippets
+This library and its public API are under development and subject to change. I'm building a minimal feature set towards an eventual 0.0.1 release. More details in the Roadmap section below.
+
+```rust
+// main.rs
+use audiate::{Note, Chord, ChordQuality};
+
+fn main() {
+    let root_note = Note::try_from("C").unwrap();
+    let chord = Chord::new(root: root_note, quality: ChordQuality::Major);
+
+    assert_eq!(root_note, chord.root());
+    assert_eq!(Note::try_from("E").unwrap(), chord.third().unwrap());
+    assert_eq!(Note::try_from("G").unwrap(), chord.fifth().unwrap());
+}
+```
 
 ## Roadmap
 
@@ -19,9 +33,8 @@ A list of items that need to be completed before the first publish to crates.io
   - [x] getter methods
   - [x] interval method
   - [x] unit tests
-  - [ ] integration tests of public API
 
-- [ ] Scale Module
+- [x] Scale Module
   - [x] Major
   - [x] Minor
   - [x] Modes
@@ -32,7 +45,7 @@ A list of items that need to be completed before the first publish to crates.io
   - [x] Whole Half
   - [x] Chromatic
   - [x] Pentatonic Scale
-  - [ ] unit tests
+  - [x] unit tests
 
 - [ ] Chord Module
   - [ ] instantiate new
