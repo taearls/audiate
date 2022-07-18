@@ -5,7 +5,7 @@
 //! ## Basic Usage
 //!
 //! ### Chords
-//! Generate C major, minor, augmented, and diminished chords from a root C note.
+//! Generate C major, minor, diminished, and augmented chords from a root C note, and then read the root, third, and fifth of the chord.
 //!
 //! ```
 //! use audiate::{
@@ -38,7 +38,7 @@
 //! ```
 //!
 //! ### Scales
-//! Generate scales from a root C note.
+//! Generate scales from a root C note, and then print the notes in the scale.
 //!
 //! ```
 //! use audiate::{
