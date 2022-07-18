@@ -30,58 +30,58 @@ A list of items that need to be completed before the first publish to crates.io
 - [x] Configure this as library, not binary application
 
 - [x] Note module
-  - [x] instantiate new
-  - [x] getter methods
-  - [x] interval method
-  - [x] unit tests
+    - [x] instantiate new
+    - [x] getter methods
+    - [x] interval method
+    - [x] unit tests
 
 - [x] Scale Module
-  - [x] Major
-  - [x] Minor
-  - [x] Modes
-  - [x] Harmonic Minor
-  - [x] Melodic Minor
-  - [x] Whole Tone
-  - [x] Half Whole
-  - [x] Whole Half
-  - [x] Chromatic
-  - [x] Pentatonic Scale
-  - [x] unit tests
+    - [x] Major
+    - [x] Minor
+    - [x] Modes
+    - [x] Harmonic Minor
+    - [x] Melodic Minor
+    - [x] Whole Tone
+    - [x] Half Whole
+    - [x] Whole Half
+    - [x] Chromatic
+    - [x] Pentatonic Scale
+    - [x] unit tests
 
 - [ ] Chord Module
-  - [ ] instantiate new
-  - [ ] getter methods
-  - [ ] notes method to get vec of notes
-  - [ ] major, minor, diminished, augmented triads
-  - [ ] major + minor sevenths
+    - [x] instantiate new
+    - [x] getter methods
+    - [x] major, minor, diminished, augmented triads
+    - [ ] major + minor sevenths
+    - [ ] unit tests
 
 - [ ] Documentation
-  - [ ] Note method documentation
-  - [ ] Scale method documentation
-  - [ ] Chord method documentation
-  - [ ] Documentation Tests
-  - [ ] Finalize explanatory comments, if any
-  - [ ] Readme updates
-  - [ ] Front page of crates.io with overview
+    - [ ] High level overview
+    - [ ] Note method documentation
+    - [ ] Scale method documentation
+    - [ ] Chord method documentation
+    - [ ] Documentation Tests
+    - [ ] Finalize explanatory comments, if any
+    - [ ] Readme updates
+    - [ ] Front page of crates.io with overview
  
 ### Future Improvements
 
-An ongoing and incomplete checklist of new features to add to this library after publishing version 0.01 to crates.io 
+An ongoing and incomplete checklist of new features to add to this library after publishing a 0.0.1 release to crates.io.
 
 - [ ] Note Module
-  - [ ] Multiple Octaves
-  - [ ] Rhythms
+    - [ ] Multiple Octaves
+    - [ ] Rhythms
 
 - [ ] Chord Module
-  - [ ] ninths
-  - [ ] elevenths
-  - [ ] thirteenths
-  - [ ] 1st inversions
-  - [ ] 2nd inversions
-  - [ ] 3rd inversions
-  - [ ] suspensions
+    - [ ] ninths
+    - [ ] elevenths
+    - [ ] thirteenths
+    - [ ] 1st inversions
+    - [ ] 2nd inversions
+    - [ ] 3rd inversions
+    - [ ] suspensions
 
 - [ ] Scale Module
-  - [ ] Multiple Octaves
-  - [ ] Non-Western Scales
-
+    - [ ] Multiple Octaves
+    - [ ] Non-Western Scales
