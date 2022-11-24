@@ -3,7 +3,7 @@ use crate::note::{Note, NotePitchInterval};
 
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Chord {
     name: String,
     quality: ChordQuality,
@@ -12,7 +12,7 @@ pub struct Chord {
 
 // the chord quality a chord can be.
 // it describes the root triad in a chord.
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ChordQuality {
     Major,
     Minor,

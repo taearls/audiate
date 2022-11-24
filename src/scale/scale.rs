@@ -9,7 +9,7 @@ pub struct Scale {
     notes: Vec<Note>,
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ScaleDirection {
     Ascending,
     Descending,

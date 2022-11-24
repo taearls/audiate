@@ -3,7 +3,7 @@ use crate::note::NotePitchInterval;
 
 use super::ScaleDirection;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum ScaleKind {
     Major,
     Minor,

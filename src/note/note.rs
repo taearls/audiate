@@ -7,7 +7,7 @@ use super::{
     util,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Note {
     name: NotePitchName,
     pitch_variant: NotePitchVariant,
